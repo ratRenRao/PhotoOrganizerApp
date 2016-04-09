@@ -21,11 +21,20 @@ public class MainActivity extends AppCompatActivity {
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private String mActivityTitle;
+    private ViewerFragment viewerFragment;
+    private ImportFragment importFragment;
+    private TagFragment tagFragment;
+    private FilterFragment filterFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        viewerFragment = new ViewerFragment();
+        importFragment = new ImportFragment();
+        tagFragment = new TagFragment();
+        filterFragment = new FilterFragment();
 
         addDrawer();
 
@@ -62,7 +71,26 @@ public class MainActivity extends AppCompatActivity {
         mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "Time for an upgrade!", Toast.LENGTH_SHORT).show();
+                switch (position)
+                {
+                    case 0:
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragmentMainContainer, filterFragment)
+                                .addToBackStack(null)
+                                .commit();
+                        break;
+                    case 1:
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragmentMainContainer, importFragment)
+                                .addToBackStack(null)
+                                .commit();
+                        break;
+                    case 2:
+                        getSupportFragmentManager().beginTransaction()
+                                .replace(R.id.fragmentMainContainer, tagFragment)
+                                .addToBackStack(null)
+                                .commit();
+                }
             }
         });
     }

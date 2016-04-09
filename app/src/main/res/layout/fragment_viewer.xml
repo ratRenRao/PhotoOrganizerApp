@@ -1,13 +1,38 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             xmlns:tools="http://schemas.android.com/tools"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             tools:context="ratrenrao.photoorganizer.ViewerFragment">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+              tools:context="ratrenrao.photoorganizer.ViewerFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment"/>
+        android:background="@color/colorPhotoBackground"
+        android:layout_weight="8">
 
-</FrameLayout>
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:text="@string/pictures_header_string"
+            android:textSize="30sp"
+            android:textColor="@android:color/white"
+            android:gravity="center_horizontal|top"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal|top"/>
+
+    </FrameLayout>
+
+    <GridLayout
+        android:id="@+id/picture_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:columnCount="2"
+        android:rowCount="1"
+        android:background="@color/colorPhotoBackground"
+        android:layout_gravity="bottom"
+        android:layout_weight="1"/>
+
+
+</LinearLayout>

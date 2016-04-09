@@ -27,6 +27,7 @@ public class ViewerFragment extends Fragment
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+    public View view;
 
     private OnFragmentInteractionListener mListener;
 
@@ -63,6 +64,7 @@ public class ViewerFragment extends Fragment
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
@@ -70,7 +72,8 @@ public class ViewerFragment extends Fragment
                              Bundle savedInstanceState)
     {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_viewer, container, false);
+        view = inflater.inflate(R.layout.fragment_viewer, container, false);
+        return view;
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -91,8 +94,8 @@ public class ViewerFragment extends Fragment
             mListener = (OnFragmentInteractionListener) context;
         } else
         {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+      //      throw new RuntimeException(context.toString()
+      //              + " must implement OnFragmentInteractionListener");
         }
     }
 

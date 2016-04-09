@@ -9,11 +9,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.GoogleApiClient;
+
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class GoogleSignIn extends AppCompatActivity
+public class GoogleSignIn extends FragmentActivity
 {
     private View view;
     GoogleSignInOptions gso;
@@ -24,15 +28,16 @@ public class GoogleSignIn extends AppCompatActivity
         // Required empty public constructor
     }
 
-
+    /*
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    protected View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_google_sign_in, container, false);
         return view;
     }
+    */
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -48,7 +53,7 @@ public class GoogleSignIn extends AppCompatActivity
         // Build a GoogleApiClient with access to the Google Sign-In API and the
         // options specified by gso.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .enableAutoManage(this /* FragmentActivity */, (GoogleApiClient.OnConnectionFailedListener) this /* OnConnectionFailedListener */)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
     }

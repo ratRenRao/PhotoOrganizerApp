@@ -37,27 +37,34 @@ class DatabaseHelper
             db.close();
     }
 
-    public long insertPicture(String id, String title, String kind, String alternateLink, String thumbnailLink)
+    public long insertPicture(String id, String title, String mimeType, String alternateLink, String thumbnailLink)
     {
-        ContentValues newPicture = new ContentValues();
-        newPicture.put("id", id);
-        newPicture.put("title", title);
-        newPicture.put("kind", kind);
-        newPicture.put("alternateLink", alternateLink);
-        newPicture.put("thumbnailLink", thumbnailLink);
+        boolean exists = db.query("pictures", null, "id=" + id, null, null, null, null) == null
+                ? false : true;
+        if (!exists)
+        {
+            ContentValues newPicture = new ContentValues();
+            newPicture.put("id", id);
+            newPicture.put("title", title);
+            newPicture.put("mimeType", mimeType);
+            newPicture.put("alternateLink", alternateLink);
+            newPicture.put("thumbnailLink", thumbnailLink);
 
-        open();
-        long _id = db.insert("pictures", null, newPicture);
-        close();
-        return _id;
+            open();
+            long _id = db.insert("pictures", null, newPicture);
+            close();
+            return _id;
+        }
+
+        return 0;
     }
 
-    public void updatePicture(long _id, String id, String title, String kind, String alternateLink, String thumbnailLink)
+    public void updatePicture(long _id, String id, String title, String mimeType, String alternateLink, String thumbnailLink)
     {
         ContentValues editPicture = new ContentValues();
         editPicture.put("id", id);
         editPicture.put("name", title);
-        editPicture.put("kind", kind);
+        editPicture.put("mimeType", mimeType);
         editPicture.put("alternateLink", alternateLink);
         editPicture.put("thumbnailLink", thumbnailLink);
 
@@ -105,7 +112,7 @@ class DatabaseHelper
                     + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + "id TEXT,"
                     + "title TEXT,"
-                    + "kind TEXT,"
+                    + "mimeType TEXT,"
                     + "alternateLink TEXT,"
                     + "thumbnailLink TEXT;";
 
@@ -120,11 +127,23 @@ class DatabaseHelper
                     + "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                     + "id TEXT,"
                     + "title TEXT,"
-                    + "kind TEXT,"
+                    + "mimeType TEXT,"
                     + "alternateLink TEXT,"
                     + "thumbnailLink TEXT;";
 
             db.execSQL(createQuery);
         }
     }
+
+    public class Picture
+
+    {
+        int _id;
+        String id;
+        String title;
+        String mimeType;
+        String alternateLink;
+        String thumbnailLink;
+    }
 }
+

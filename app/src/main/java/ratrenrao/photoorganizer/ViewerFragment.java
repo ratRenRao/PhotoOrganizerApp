@@ -1,70 +1,39 @@
 package ratrenrao.photoorganizer;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CursorAdapter;
+import android.widget.SimpleCursorAdapter;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+
+import javax.net.ssl.HttpsURLConnection;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link ViewerFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link ViewerFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class ViewerFragment extends Fragment
 {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     public View view;
-
-    private OnFragmentInteractionListener mListener;
+    private CursorAdapter pictureAdapter;
+    private DatabaseHelper.Picture[] pictures;
 
     public ViewerFragment()
     {
         // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ViewerFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ViewerFragment newInstance(String param1, String param2)
-    {
-        ViewerFragment fragment = new ViewerFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null)
-        {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
     }
 
     @Override
@@ -76,49 +45,139 @@ public class ViewerFragment extends Fragment
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri)
+    @Override
+    public void onCreate(Bundle savedInstanceState)
     {
-        if (mListener != null)
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null)
         {
-            mListener.onFragmentInteraction(uri);
         }
+
+        //int[] to = new int[]{android.R.id.text1};
+
+        //pictureAdapter = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_list_item_1, pictures, to, 0);
     }
 
     @Override
     public void onAttach(Context context)
     {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener)
-        {
-            mListener = (OnFragmentInteractionListener) context;
-        } else
-        {
-      //      throw new RuntimeException(context.toString()
-      //              + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override
     public void onDetach()
     {
         super.onDetach();
-        mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
-    public interface OnFragmentInteractionListener
+    private void onImportPictures()
     {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        pictureAdapter.changeCursor(null);
+        new GetPictureData().execute("");
     }
+
+    public class GetPictureData extends AsyncTask<String, Integer, String>
+    {
+        final DatabaseHelper databaseHelper =
+                new DatabaseHelper(getActivity());
+
+        //final String AUTH_TOKEN = DatabaseHelper.AUTH_TOKEN;
+        String rawJSON = "";
+
+        @Override
+        protected String doInBackground(String... params)
+        {
+            try
+            {
+                URL url = new URL("https://weber.instructure.com/api/v1/courses");
+                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("Authorization", "Bearer " + AUTH_TOKEN);
+                conn.connect();
+                int status = conn.getResponseCode();
+                switch (status)
+                {
+                    case 200:
+                    case 201:
+                        BufferedReader br =
+                                new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        rawJSON = br.readLine();
+                }
+            } catch (IOException e)
+            {
+                Log.d("test", e.getMessage());
+            }
+            return rawJSON;
+        }
+
+        @Override
+        protected void onPostExecute(String result)
+        {
+            super.onPostExecute(result);
+
+            databaseHelper.open();
+
+            try
+            {
+            //    databaseHelper.deleteAllCourses();
+            //    databaseHelper.deleteAllAssignments();
+                pictures = parsePictureJson(result);
+                for (DatabaseHelper.Picture picture : pictures)
+                {
+                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.alternateLink, picture.thumbnailLink);
+                    //new GetAssignmentsApi().execute(new Long[]{Long.parseLong(picture.id), rowId});
+                }
+            } catch (Exception ignored)
+            {
+
+            }
+
+            updatePictureGrid();
+            databaseHelper.close();
+        }
+    }
+
+    public void updatePictureGrid()
+    {
+        new GetDbCourse().execute((Object[]) null);
+    }
+
+    private class GetDbCourse extends AsyncTask<Object, Object, Cursor>
+    {
+        final DatabaseHelper databaseHelper =
+                new DatabaseHelper(getActivity());
+
+        @Override
+        protected Cursor doInBackground(Object... params)
+        {
+            databaseHelper.open();
+            return databaseHelper.getAllPictures();
+        }
+
+        @Override
+        protected void onPostExecute(Cursor result)
+        {
+            pictureAdapter.changeCursor(result);
+            databaseHelper.close();
+        }
+    }
+
+    private DatabaseHelper.Picture[] parsePictureJson(String rawJson)
+    {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        Gson gson = gsonBuilder.create();
+
+        DatabaseHelper.Picture[] parsedPictures = null;
+
+        try
+        {
+            parsedPictures = gson.fromJson(rawJson, DatabaseHelper.Picture[].class);
+        } catch (Exception ignored)
+        {
+
+        }
+
+        return parsedPictures;
+    }
+
 }

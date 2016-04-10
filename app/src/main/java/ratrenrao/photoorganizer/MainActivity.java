@@ -19,6 +19,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 
 
 public class MainActivity extends AppCompatActivity
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity
     private ImportFragment importFragment;
     private TagFragment tagFragment;
     private FilterFragment filterFragment;
+    private ApiConnector apiConnector;
     private GoogleSignInOptions gso;
     private GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 9001;
@@ -72,6 +75,12 @@ public class MainActivity extends AppCompatActivity
 
         signIn();
 
+        if (mGoogleApiClient != null)
+        {
+            apiConnector = new ApiConnector();
+            apiConnector.setGoogleApiClient(mGoogleApiClient);
+        }
+
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
             getSupportFragmentManager().beginTransaction()
@@ -95,6 +104,21 @@ public class MainActivity extends AppCompatActivity
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    private void signOut()
+    {
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>()
+                {
+                    @Override
+                    public void onResult(Status status)
+                    {
+                        // [START_EXCLUDE]
+                        //updateUI(false);
+                        // [END_EXCLUDE]
+                    }
+                });
+    }
+
     private void addDrawer()
     {
         mDrawerList = (ListView)findViewById(R.id.navList);
@@ -111,7 +135,8 @@ public class MainActivity extends AppCompatActivity
     private void addDrawerItems() {
         String[] osArray = { getResources().getString(R.string.filter_sidebar_string),
                 getResources().getString(R.string.import_sidebar_string),
-                getResources().getString(R.string.tag_sidebar_string) };
+                getResources().getString(R.string.tag_sidebar_string),
+                getResources().getString(R.string.google_change_account_string)};
 
         mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
@@ -138,6 +163,11 @@ public class MainActivity extends AppCompatActivity
                                 .replace(R.id.fragmentMainContainer, tagFragment)
                                 .addToBackStack(null)
                                 .commit();
+                        break;
+                    case 3:
+                        signOut();
+                        signIn();
+                        break;
                 }
             }
         });

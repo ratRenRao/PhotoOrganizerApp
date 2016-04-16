@@ -92,7 +92,7 @@ public class ViewerFragment extends Fragment
                 URL url = new URL("https://weber.instructure.com/api/v1/courses");
                 HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
-                //conn.setRequestProperty("Authorization", "Bearer " + AUTH_TOKEN);
+              //  conn.setRequestProperty("Authorization", "Bearer " + AUTH_TOKEN);
                 conn.connect();
                 int status = conn.getResponseCode();
                 switch (status)

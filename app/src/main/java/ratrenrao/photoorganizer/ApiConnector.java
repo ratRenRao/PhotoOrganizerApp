@@ -118,27 +118,60 @@ public class ApiConnector extends FragmentActivity
         {
             super.onPostExecute(result);
 
-            if (result == null)
+            if (result.getMetadataBuffer().getCount() <= 0)
                 new CreateAppFolderTask().execute();
+            else
+                new GetPhotosTask().execute();
+        }
+    }
+
+    public class GetPhotosTask extends AsyncTask<Void, Void, MetadataBufferResult>
+    {
+        MetadataBufferResult result;
+
+        @Override
+        protected MetadataBufferResult doInBackground(Void... params)
+        {
+            try
+            {
+            }
+            catch (Exception e) {}
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(MetadataBufferResult result)
+        {
+            super.onPostExecute(result);
+
         }
     }
 
     public class CreateAppFolderTask extends AsyncTask<Void, Void, Void>
     {
+        ResultCallback<DriveFolder.DriveFolderResult> folderCreatedCallback = new
+                ResultCallback<DriveFolder.DriveFolderResult>() {
+                    @Override
+                    public void onResult(DriveFolder.DriveFolderResult result) {
+                        if (!result.getStatus().isSuccess()) {
+                            //showMessage("Error while trying to create the folder");
+                            return;
+                        }
+                        //showMessage("Created a folder: " + result.getDriveFolder().getDriveId());
+                    }
+                };
 
         @Override
         protected Void doInBackground(Void... params)
         {
             try
             {
-                MetadataChangeSet fileMetadata = new MetadataChangeSet.Builder()
-                        .setTitle("PhotoOrganizer")
-                        .setMimeType("application/vnd.google-apps.folder")
-                        .build();
+                MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
+                        .setTitle("PhotoOrganizerApp").build();
 
-                Drive.DriveApi.newCreateFileActivityBuilder()
-                        .setInitialMetadata(fileMetadata)
-                        .build(mGoogleApiClient);
+                Drive.DriveApi.getRootFolder(mGoogleApiClient).createFolder(
+                        mGoogleApiClient, changeSet).setResultCallback(folderCreatedCallback);
             }
             catch (Exception e) {}
 
@@ -227,7 +260,7 @@ public class ApiConnector extends FragmentActivity
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult)
     {
-
+        return;
     }
 }
 
@@ -238,4 +271,10 @@ class Metadata
     String name;
     String mimeType;
 
+}
+
+class ApiResult
+{
+    String statusCode;
+    String resolution;
 }

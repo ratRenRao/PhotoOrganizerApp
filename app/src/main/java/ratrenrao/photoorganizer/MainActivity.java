@@ -24,8 +24,7 @@ import com.google.android.gms.common.api.Status;
 
 
 public class MainActivity extends AppCompatActivity
-    implements OnConnectionFailedListener {
-
+{
     private ListView mDrawerList;
     private DrawerLayout mDrawerLayout;
     private ArrayAdapter<String> mAdapter;
@@ -36,10 +35,6 @@ public class MainActivity extends AppCompatActivity
     private TagFragment tagFragment;
     private FilterFragment filterFragment;
     private ApiConnector apiConnector;
-    private GoogleSignInOptions gso;
-    private GoogleApiClient mGoogleApiClient;
-    private static final int RC_SIGN_IN = 9001;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,36 +45,9 @@ public class MainActivity extends AppCompatActivity
         importFragment = new ImportFragment();
         tagFragment = new TagFragment();
         filterFragment = new FilterFragment();
+        apiConnector = new ApiConnector();
 
         addDrawer();
-
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-
-        // Build a GoogleApiClient with access to the Google Sign-In API and the
-        // options specified by gso.
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        //mGoogleApiClient = new GoogleApiClient.Builder(this)
-        //        .enableAutoManage(this /* FragmentActivity */,
-        //                this /* OnConnectionFailedListener */)
-        //        .addApi(Drive.API)
-        //        .addScope(Drive.SCOPE_FILE)
-        //        .build();
-
-        signIn();
-
-        if (mGoogleApiClient != null)
-        {
-            apiConnector = new ApiConnector();
-            apiConnector.setGoogleApiClient(mGoogleApiClient);
-        }
 
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
@@ -87,36 +55,6 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.fragmentMainContainer, new ViewerFragment())
                     .commit();
         }
-
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // An unresolvable error has occurred and a connection to Google APIs
-        // could not be established. Display an error message, or handle
-        // the failure silently
-
-        // ...
-    }
-
-    private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    private void signOut()
-    {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>()
-                {
-                    @Override
-                    public void onResult(Status status)
-                    {
-                        // [START_EXCLUDE]
-                        //updateUI(false);
-                        // [END_EXCLUDE]
-                    }
-                });
     }
 
     private void addDrawer()
@@ -165,8 +103,8 @@ public class MainActivity extends AppCompatActivity
                                 .commit();
                         break;
                     case 3:
-                        signOut();
-                        signIn();
+                        apiConnector.signOut();
+                        apiConnector.signIn();
                         break;
                 }
             }

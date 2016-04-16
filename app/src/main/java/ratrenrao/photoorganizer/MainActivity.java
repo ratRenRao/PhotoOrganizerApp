@@ -1,9 +1,12 @@
 package ratrenrao.photoorganizer;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Debug;
+import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -17,14 +20,22 @@ import android.widget.ListView;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.Drive;
+import com.google.api.client.extensions.android.http.AndroidHttp;
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
+import com.google.api.services.drive.DriveScopes;
 
 
 public class MainActivity extends AppCompatActivity
-    implements OnConnectionFailedListener {
+    implements OnConnectionFailedListener,
+        GoogleApiClient.ConnectionCallbacks
+{
 
     private ListView mDrawerList;
     private DrawerLayout mDrawerLayout;
@@ -39,6 +50,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleSignInOptions gso;
     private GoogleApiClient mGoogleApiClient;
     private static final int RC_SIGN_IN = 9001;
+    private static final int REQUEST_CODE_RESOLUTION = 3;
 
 
     @Override
@@ -53,33 +65,27 @@ public class MainActivity extends AppCompatActivity
 
         addDrawer();
 
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        /*
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
 
-        // Build a GoogleApiClient with access to the Google Sign-In API and the
-        // options specified by gso.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, this /* OnConnectionFailedListener */)
+                .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                //.addApi(Drive.API)
+                .addConnectionCallbacks(this)
                 .build();
 
-        //mGoogleApiClient = new GoogleApiClient.Builder(this)
-        //        .enableAutoManage(this /* FragmentActivity */,
-        //                this /* OnConnectionFailedListener */)
-        //        .addApi(Drive.API)
-        //        .addScope(Drive.SCOPE_FILE)
-        //        .build();
-
         signIn();
+        */
 
-        if (mGoogleApiClient != null)
-        {
-            apiConnector = new ApiConnector();
-            apiConnector.setGoogleApiClient(mGoogleApiClient);
-        }
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Drive.API)
+                .addScope(Drive.SCOPE_FILE)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
 
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
@@ -87,16 +93,36 @@ public class MainActivity extends AppCompatActivity
                     .add(R.id.fragmentMainContainer, new ViewerFragment())
                     .commit();
         }
-
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // An unresolvable error has occurred and a connection to Google APIs
-        // could not be established. Display an error message, or handle
-        // the failure silently
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
 
-        // ...
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        if (connectionResult.hasResolution()) {
+            try {
+                connectionResult.startResolutionForResult(this, REQUEST_CODE_RESOLUTION);
+            } catch (IntentSender.SendIntentException e) {
+                // Unable to resolve, message user appropriately
+            }
+        } else {
+            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), this, 0).show();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+        switch (requestCode) {
+            case REQUEST_CODE_RESOLUTION:
+                if (resultCode == RESULT_OK) {
+                    mGoogleApiClient.connect();
+                }
+                break;
+        }
     }
 
     private void signIn() {
@@ -141,9 +167,11 @@ public class MainActivity extends AppCompatActivity
         mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
 
-        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mDrawerList.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
                 switch (position)
                 {
                     case 0:
@@ -233,5 +261,21 @@ public class MainActivity extends AppCompatActivity
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle)
+    {
+        if (apiConnector == null)
+            apiConnector = new ApiConnector();
+
+        apiConnector.setGoogleApiClient(mGoogleApiClient, gso);
+        apiConnector.checkForAppFolder();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i)
+    {
+
     }
 }

@@ -1,12 +1,16 @@
 package ratrenrao.photoorganizer;
 
 
+import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
+import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
@@ -24,22 +28,20 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.drive.DriveApi.MetadataBufferResult;
 import com.google.android.gms.drive.query.Filters;
 import com.google.android.gms.drive.query.Query;
 import com.google.android.gms.drive.query.SearchableField;
+import com.google.android.gms.drive.*;
+
 import com.google.api.client.http.HttpTransport;
-import com.google.api.services.drive.model.File;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.drive.*;
 
 import java.io.IOException;
 
 
-public class ApiConnector extends AppCompatActivity
+public class ApiConnector extends FragmentActivity
         implements OnConnectionFailedListener
 {
     private GoogleApiClient mGoogleApiClient;
@@ -54,35 +56,94 @@ public class ApiConnector extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
 
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
         gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
                 .build();
 
-        // Build a GoogleApiClient with access to the Google Sign-In API and the
-        // options specified by gso.
         mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this /* FragmentActivity */, (GoogleApiClient.OnConnectionFailedListener) this /* OnConnectionFailedListener */)
+                .enableAutoManage(this, this)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE)
+                        //.addApi(Drive.API)
+                        //.addScope(Drive.SCOPE_FILE)
                 .build();
 
-        checkForAppFolder();
+        //checkForAppFolder();
+    }
+
+    protected void setGoogleApiClient(GoogleApiClient mGoogleApiClient, GoogleSignInOptions gso)
+    {
+        this.mGoogleApiClient = mGoogleApiClient;
+        this.gso = gso;
     }
 
     protected void checkForAppFolder()
     {
+        new CheckForAppFolderTask().execute();
+
+        /*
         Query query = new Query.Builder()
                 .addFilter(Filters.eq(SearchableField.TITLE, "PhotoOrganizerApp"))
                 .build();
         // Invoke the query synchronously
-        DriveApi.MetadataBufferResult result =
+        MetadataBufferResult result =
                 Drive.DriveApi.query(mGoogleApiClient, query).await();
 
-        if(result == null)
+        if (result == null)
             createAppFolder();
+            */
+    }
+
+    public class CheckForAppFolderTask extends AsyncTask<Void, Void, MetadataBufferResult>
+    {
+        MetadataBufferResult result;
+
+        @Override
+        protected MetadataBufferResult doInBackground(Void... params)
+        {
+            try
+            {
+                Query query = new Query.Builder()
+                        .addFilter(Filters.eq(SearchableField.TITLE, "PhotoOrganizerApp"))
+                        .build();
+
+                result = Drive.DriveApi.query(mGoogleApiClient, query).await();
+            }
+            catch (Exception e) {}
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(MetadataBufferResult result)
+        {
+            super.onPostExecute(result);
+
+            if (result == null)
+                new CreateAppFolderTask().execute();
+        }
+    }
+
+    public class CreateAppFolderTask extends AsyncTask<Void, Void, Void>
+    {
+
+        @Override
+        protected Void doInBackground(Void... params)
+        {
+            try
+            {
+                MetadataChangeSet fileMetadata = new MetadataChangeSet.Builder()
+                        .setTitle("PhotoOrganizer")
+                        .setMimeType("application/vnd.google-apps.folder")
+                        .build();
+
+                Drive.DriveApi.newCreateFileActivityBuilder()
+                        .setInitialMetadata(fileMetadata)
+                        .build(mGoogleApiClient);
+            }
+            catch (Exception e) {}
+
+            return null;
+        }
     }
 
     protected void createAppFolder()
@@ -97,9 +158,9 @@ public class ApiConnector extends AppCompatActivity
 
         //try
         //{
-            Drive.DriveApi.newCreateFileActivityBuilder()
-                    .setInitialMetadata(fileMetadata)
-                    .build(mGoogleApiClient);
+        Drive.DriveApi.newCreateFileActivityBuilder()
+                .setInitialMetadata(fileMetadata)
+                .build(mGoogleApiClient);
             /*File file = driveService.files().create(fileMetadata)
                     .setFields("id")
                     .execute();
@@ -110,7 +171,22 @@ public class ApiConnector extends AppCompatActivity
         */
     }
 
-    protected void signIn() {
+    protected void signIn()
+    {
+        if (gso == null || mGoogleApiClient == null)
+        {
+            gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .build();
+
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .enableAutoManage(this, this)
+                    .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                            //.addApi(Drive.API)
+                            //.addScope(Drive.SCOPE_FILE)
+                    .build();
+        }
+
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -139,7 +215,7 @@ public class ApiConnector extends AppCompatActivity
 
         try
         {
-            parsedMetadata= gson.fromJson(rawJson, Metadata[].class);
+            parsedMetadata = gson.fromJson(rawJson, Metadata[].class);
         } catch (Exception ignored)
         {
 
@@ -149,16 +225,17 @@ public class ApiConnector extends AppCompatActivity
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult)
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult)
     {
 
     }
+}
 
-    class Metadata
-    {
-        String id;
-        String name;
-        String mimeType;
 
-    }
+class Metadata
+{
+    String id;
+    String name;
+    String mimeType;
+
 }

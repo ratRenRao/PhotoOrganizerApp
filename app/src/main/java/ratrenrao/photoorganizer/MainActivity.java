@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity
     private ApiConnector apiConnector;
 
     private GoogleApiClient mGoogleApiClient;
-    private static final int RC_SIGN_IN = 9001;
+    private GoogleSignInOptions gso;
     private static final int REQUEST_CODE_RESOLUTION = 3;
 
     private static final String api_key = "AIzaSyC09bbMiXZAIATOyX13ZBaXZhhmIG0JoKA";
@@ -98,8 +98,9 @@ public class MainActivity extends AppCompatActivity
 
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
+            viewerFragment = new ViewerFragment();
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragmentMainContainer, new ViewerFragment())
+                    .add(R.id.fragmentMainContainer, viewerFragment)
                     .commit();
         }
     }
@@ -216,10 +217,11 @@ public class MainActivity extends AppCompatActivity
                                 .commit();
                         break;
                     case 1:
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.fragmentMainContainer, importFragment)
-                                .addToBackStack(null)
-                                .commit();
+                        //getSupportFragmentManager().beginTransaction()
+                        //        .replace(R.id.fragmentMainContainer, importFragment)
+                        //        .addToBackStack(null)
+                        //        .commit();
+                        viewerFragment.importPhoto();
                         break;
                     case 2:
                         getSupportFragmentManager().beginTransaction()

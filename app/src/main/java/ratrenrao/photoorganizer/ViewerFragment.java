@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -160,6 +161,15 @@ public class ViewerFragment extends Fragment
             pictureAdapter.changeCursor(result);
             databaseHelper.close();
         }
+    }
+
+    protected void importPhoto()
+    {
+        new FileChooser(getActivity()).setFileListener(new FileChooser.FileSelectedListener() {
+            @Override public void fileSelected(final File file) {
+                new ApiConnector().uploadPhoto(file);
+            }
+        }).showDialog();
     }
 
     private DatabaseHelper.Picture[] parsePictureJson(String rawJson)

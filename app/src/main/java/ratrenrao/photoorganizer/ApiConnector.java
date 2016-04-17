@@ -38,16 +38,17 @@ import com.google.api.client.http.HttpTransport;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.File;
 import java.io.IOException;
 
 
 public class ApiConnector extends FragmentActivity
         implements OnConnectionFailedListener
 {
-    private GoogleApiClient mGoogleApiClient;
+    private static GoogleApiClient mGoogleApiClient;
     private Drive driveService;
     private HttpTransport httpTransport;
-    private GoogleSignInOptions gso;
+    private static GoogleSignInOptions gso;
     private static final int RC_SIGN_IN = 9001;
 
 
@@ -74,6 +75,11 @@ public class ApiConnector extends FragmentActivity
     {
         this.mGoogleApiClient = mGoogleApiClient;
         this.gso = gso;
+    }
+
+    protected void uploadPhoto(File file)
+    {
+
     }
 
     protected void checkForAppFolder()

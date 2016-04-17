@@ -31,6 +31,7 @@ dependencies {
         exclude group: 'org.apache.httpcomponents'
     }
 
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.2.0'
     compile 'com.android.support:design:23.2.0'
     compile 'com.android.support:support-v4:23.2.0'
@@ -39,4 +40,5 @@ dependencies {
     compile 'com.google.android.gms:play-services-drive:8.4.0'
     compile 'com.google.code.gson:gson:2.4'
     compile 'pub.devrel:easypermissions:0.1.5'
+    compile 'com.google.http-client:google-http-client-gson:1.20.0'
 }

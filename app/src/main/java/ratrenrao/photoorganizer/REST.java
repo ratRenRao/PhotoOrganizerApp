@@ -41,17 +41,20 @@ final class REST { private REST() {}
      * @param act   activity context
      */
     static boolean init(Activity act){                    //UT.lg( "REST init " + email);
-        if (act != null) try {
-            String email = UT.AM.getEmail();
-            if (email != null) {
-                mConnCBs = (ConnectCBs)act;
-                mGOOSvc = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(),
-                        GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE_FILE))
-                                .setSelectedAccountName(email)
-                ).build();
-                return true;
+        if (act != null)
+            try {
+                String email = UT.AM.getEmail();
+                if (email != null) {
+                    mConnCBs = (ConnectCBs)act;
+                    mGOOSvc = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(),
+                            GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE_METADATA_READONLY))
+                                    .setSelectedAccountName(email)
+                    ).build();
+                    return true;
+                }
+            } catch (Exception e) {
+                UT.le(e);
             }
-        } catch (Exception e) {UT.le(e);}
         return false;
     }
     /**
@@ -65,7 +68,7 @@ final class REST { private REST() {}
                 protected Exception doInBackground(Void... nadas) {
                     try {
                         // GoogleAuthUtil.getToken(mAct, email, DriveScopes.DRIVE_FILE);   SO 30122755
-                        mGOOSvc.files().get("root").setFields("title").execute();
+                        mGOOSvc.files().get("root").setFields("name").execute();
                         mConnected = true;
                     } catch (UserRecoverableAuthIOException uraIOEx) {  // standard authorization failure - user fixable
                         return uraIOEx;
@@ -113,7 +116,6 @@ final class REST { private REST() {}
             String qryClause = "'me' in owners and ";
             if (prnId != null) qryClause += "'" + prnId + "' in parents and ";
             if (titl != null) qryClause += "title = '" + titl + "' and ";
-            mime = "application/vnd.google-apps.photo";
             if (mime != null) qryClause += "mimeType = '" + mime + "' and ";
             qryClause = qryClause.substring(0, qryClause.length() - " and ".length());
             Drive.Files.List qry = mGOOSvc.files().list().setQ(qryClause)

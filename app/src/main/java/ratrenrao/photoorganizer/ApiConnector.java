@@ -64,8 +64,6 @@ public class ApiConnector extends FragmentActivity
 
     private static final int REQ_ACCPICK = 1;
     private static final int REQ_CONNECT = 2;
-    private static final int REQ_CREATE = 3;
-    private static final int REQ_PICKFILE = 4;
 
     private static boolean mBusy;
 
@@ -390,12 +388,15 @@ public class ApiConnector extends FragmentActivity
                     return null;
                 }
                 @Override
-                protected void onProgressUpdate(String... strings) { super.onProgressUpdate(strings);
-                    //mDispTxt.append("\n" + strings[0]);
+                protected void onProgressUpdate(String... strings)
+                {
+                    super.onProgressUpdate(strings);
                 }
+
                 @Override
-                protected void onPostExecute(Void nada) { super.onPostExecute(nada);
-                    //mDispTxt.append("\n\nDONE");
+                protected void onPostExecute(Void params)
+                {
+                    super.onPostExecute(params);
                     mBusy = false;
                 }
             }.execute();
@@ -407,44 +408,67 @@ public class ApiConnector extends FragmentActivity
      *  'description' meadata in the process
      */
     private void testTree() {
+
+        final ArrayList<ContentValues> accountFolders = new ArrayList<>();
+
         if (!mBusy) {
-            //mDispTxt.setText("DOWNLOADING\n");
             new AsyncTask<Void, String, Void>() {
 
-                private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = REST.search(gfParent.getAsString(UT.GDID), null, null);
-                    if (cvs != null) for (ContentValues cv : cvs) {
-                        String gdid = cv.getAsString(UT.GDID);
-                        String titl = cv.getAsString(UT.TITL);
-
-
+                private void iterate(ArrayList<ContentValues> parentFolders) {
+                    for (ContentValues parentFolder : parentFolders)
+                    {
+                        ArrayList<ContentValues> childrenFolders = REST.search(parentFolder.getAsString(UT.GDID), null, "application/vnd.google-apps.folder");
+                        if (childrenFolders != null && childrenFolders.size() > 0)
+                        {
+                            iterate(childrenFolders);
+                        }
+                        accountFolders.add(parentFolder);
                     }
                 }
 
                 @Override
                 protected Void doInBackground(Void... params) {
                     mBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = REST.search("root", UT.MYROOT, null);
-                    if (gfMyRoot != null && gfMyRoot.size() == 1 ){
-                        publishProgress(gfMyRoot.get(0).getAsString(UT.TITL));
-                        iterate(gfMyRoot.get(0));
-                    }
+                    ArrayList<ContentValues> rootFolders = REST.search("root", null, "application/vnd.google-apps.folder");
+                    if (rootFolders != null && rootFolders.size() > 0 )
+                        iterate(rootFolders);
                     return null;
                 }
 
                 @Override
                 protected void onProgressUpdate(String... strings) {
                     super.onProgressUpdate(strings);
-                    //mDispTxt.append("\n" + strings[0]);
                 }
 
                 @Override
-                protected void onPostExecute(Void nada) {
-                    super.onPostExecute(nada);
-                    //mDispTxt.append("\n\nDONE");
-                    mBusy = false;
+                protected void onPostExecute(Void params) {
+                    super.onPostExecute(params);
                 }
             }.execute();
+        }
+    }
+
+    public class ParseContentValuesTask extends AsyncTask<ArrayList<ContentValues>, Void, Void>
+    {
+        final ArrayList<ContentValues> accountPhotos = new ArrayList<>();
+
+        @Override
+        protected Void doInBackground(ArrayList<ContentValues>... params)
+        {
+            for (ContentValues folder : params[0])
+            {
+                ArrayList<ContentValues> photos = REST.search(folder.getAsString(UT.GDID), null, "application/vnd.google-apps.application/vnd.google-apps.photo");
+                for (ContentValues photo : photos)
+                    accountPhotos.add(photo);
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void params)
+        {
+            super.onPostExecute(params);
+            mBusy = false;
         }
     }
 

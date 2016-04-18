@@ -74,15 +74,13 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQ_ACCPICK = 1;
     private static final int REQ_CONNECT = 2;
-    private static final int REQ_CREATE = 3;
-    private static final int REQ_PICKFILE = 4;
 
     //private static TextView mDispTxt;
     private static boolean mBusy;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    protected void onCreate(Bundle bundle) {
+        super.onCreate(bundle);
         setContentView(R.layout.activity_main);
 
         viewerFragment = new ViewerFragment();
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity
 
         addDrawer();
 
-        if (savedInstanceState == null) {
+        if (bundle == null) {
             UT.init(this);
             if (!REST.init(this)) {
                 startActivityForResult(AccountPicker.newChooseAccountIntent(null,
@@ -173,7 +171,7 @@ public class MainActivity extends AppCompatActivity
     */
 
     @Override
-    protected void onActivityResult(int request, int result, Intent data) {
+    protected void onActivityResult(final int request, final int result, final Intent data) {
         switch (request) {
             case REQ_CONNECT:
                 if (result == RESULT_OK)
@@ -237,7 +235,9 @@ public class MainActivity extends AppCompatActivity
                         break;
                     case 1:
                         //viewerFragment.importPhoto();
+                        //REST.connect();
                         apiConnector.parsePhotoData();
+                        //REST.disconnect();
                         break;
                     case 2:
                         getSupportFragmentManager().beginTransaction()
@@ -349,11 +349,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume() {  super.onResume();
+    protected void onResume() {
+        super.onResume();
         REST.connect();
     }
     @Override
-    protected void onPause() {  super.onPause();
+    protected void onPause() {
+        super.onPause();
         REST.disconnect();
     }
 

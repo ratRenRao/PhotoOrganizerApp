@@ -112,8 +112,8 @@ final class REST { private REST() {}
             // add query conditions, build query
             String qryClause = "'me' in owners and ";
             if (prnId != null) qryClause += "'" + prnId + "' in parents and ";
-            //if (titl != null) qryClause += "title = '" + titl + "' and ";
-            //mime = "application/vnd.google-apps.photo";
+            if (titl != null) qryClause += "title = '" + titl + "' and ";
+            mime = "application/vnd.google-apps.photo";
             if (mime != null) qryClause += "mimeType = '" + mime + "' and ";
             qryClause = qryClause.substring(0, qryClause.length() - " and ".length());
             Drive.Files.List qry = mGOOSvc.files().list().setQ(qryClause)

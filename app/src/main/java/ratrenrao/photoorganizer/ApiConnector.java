@@ -1,28 +1,11 @@
 package ratrenrao.photoorganizer;
 
 
-import android.app.Fragment;
-import android.content.BroadcastReceiver;
 import android.content.ContentValues;
-import android.content.Context;
-import android.content.Intent;
 import android.content.IntentSender;
-import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Debug;
-import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -31,14 +14,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.drive.DriveApi.MetadataBufferResult;
-import com.google.android.gms.drive.query.Filters;
-import com.google.android.gms.drive.query.Query;
-import com.google.android.gms.drive.query.SearchableField;
-import com.google.android.gms.drive.*;
-
+import com.google.android.gms.drive.Drive;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
@@ -46,7 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 
@@ -87,13 +62,6 @@ public class ApiConnector extends FragmentActivity
         //checkForAppFolder();
     }
 
-    /*protected void setGoogleApiClient(GoogleApiClient mGoogleApiClient, GoogleSignInOptions gso)
-    {
-        this.mGoogleApiClient = mGoogleApiClient;
-        this.gso = gso;
-    }
-    */
-
     protected void uploadPhoto(File file)
     {
 
@@ -101,26 +69,15 @@ public class ApiConnector extends FragmentActivity
 
     protected void checkForAppFolder()
     {
-        new CheckForAppFolderTask().execute();
-
-        /*
-        Query query = new Query.Builder()
-                .addFilter(Filters.eq(SearchableField.TITLE, "PhotoOrganizerApp"))
-                .build();
-        // Invoke the query synchronously
-        MetadataBufferResult result =
-                Drive.DriveApi.query(mGoogleApiClient, query).await();
-
-        if (result == null)
-            createAppFolder();
-            */
+        //new CheckForAppFolderTask().execute();
     }
 
     protected void parsePhotoData()
     {
-        testTree();
+        new GetContentValuesTask().execute();
     }
 
+    /*
     public class CheckForAppFolderTask extends AsyncTask<Void, Void, MetadataBufferResult>
     {
         MetadataBufferResult result;
@@ -209,63 +166,16 @@ public class ApiConnector extends FragmentActivity
 
     protected void createAppFolder()
     {
-        //File fileMetadata = new File();
-        //fileMetadata.setName("PhotoOrganizerApp");
-        //fileMetadata.setMimeType("application/vnd.google-apps.folder");
         MetadataChangeSet fileMetadata = new MetadataChangeSet.Builder()
                 .setTitle("PhotoOrganizer")
                 .setMimeType("application/vnd.google-apps.folder")
                 .build();
 
-        //try
-        //{
         Drive.DriveApi.newCreateFileActivityBuilder()
                 .setInitialMetadata(fileMetadata)
                 .build(mGoogleApiClient);
-            /*File file = driveService.files().create(fileMetadata)
-                    .setFields("id")
-                    .execute();
-        } catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        */
     }
-
-    protected void signIn()
-    {
-        if (gso == null || mGoogleApiClient == null)
-        {
-            gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestEmail()
-                    .build();
-
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .enableAutoManage(this, this)
-                    .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                            //.addApi(Drive.API)
-                            //.addScope(Drive.SCOPE_FILE)
-                    .build();
-        }
-
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
-    }
-
-    protected void signOut()
-    {
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>()
-                {
-                    @Override
-                    public void onResult(Status status)
-                    {
-                        // [START_EXCLUDE]
-                        //updateUI(false);
-                        // [END_EXCLUDE]
-                    }
-                });
-    }
+    */
 
     private Metadata[] parseMetadataJson(String rawJson)
     {
@@ -333,118 +243,46 @@ public class ApiConnector extends FragmentActivity
 
     }
 
-    /**
-     * creates a directory tree to house a text file
-     * @param titl file name (confirms to 'yyMMdd-HHmmss' and it's name is used
-     *             to create it's parent folder 'yyyy-MM' under a common root 'GDRTDemo'
-     *             GDRTDemo ---+--- yyyy-MM ---+--- yyMMdd-HHmmss
-     *                         |               +--- yyMMdd-HHmmss
-     *                         +--- yyyy-MM ---+--- yyMMdd-HHmmss
-     *                                         +--- yyMMdd-HHmmss
-     *                                              ....
-     */
-    private void createTree(final String titl) {
-        if (titl != null && !mBusy) {
-            //mDispTxt.setText("UPLOADING\n");
-
-            new AsyncTask<Void, String, Void>() {
-                private String findOrCreateFolder(String prnt, String titl){
-                    ArrayList<ContentValues> cvs = REST.search(prnt, titl, UT.MIME_FLDR);
-                    String id = "", txt = "";
-                    if (cvs.size() > 0) {
-                        txt = "found ";
-                        id =  cvs.get(0).getAsString(UT.GDID);
-                    } else {
-                        //id = REST.createFolder(prnt, titl);
-                        txt = "created ";
-                    }
-                    if (id != null)
-                        txt += titl;
-                    else
-                        txt = "failed " + titl;
-                    publishProgress(txt);
-                    return id;
-                }
-
-                @Override
-                protected Void doInBackground(Void... params) {
-                    mBusy = true;
-                    String rsid = findOrCreateFolder("root", UT.MYROOT);
-                    if (rsid != null) {
-                        rsid = findOrCreateFolder(rsid, UT.titl2Month(titl));
-                        if (rsid != null) {
-                            File fl = UT.str2File("content of " + titl, "tmp" );
-                            String id = null;
-                            if (fl != null) {
-                                // id = REST.createFile(rsid, titl, UT.MIME_TEXT, fl);
-                                fl.delete();
-                            }
-                            if (id != null)
-                                publishProgress("created " + titl);
-                            else
-                                publishProgress("failed " + titl);
-                        }
-                    }
-                    return null;
-                }
-                @Override
-                protected void onProgressUpdate(String... strings)
-                {
-                    super.onProgressUpdate(strings);
-                }
-
-                @Override
-                protected void onPostExecute(Void params)
-                {
-                    super.onPostExecute(params);
-                    mBusy = false;
-                }
-            }.execute();
-        }
-    }
 
     /**
+     @Override
+     public void onConnOK()
+     {
+
+     }
      *  scans folder tree created by this app listing folders / files, updating file's
      *  'description' meadata in the process
      */
-    private void testTree() {
-
+    public class GetContentValuesTask extends AsyncTask<Void, Void, Void>
+    {
         final ArrayList<ContentValues> accountFolders = new ArrayList<>();
 
-        if (!mBusy) {
-            new AsyncTask<Void, String, Void>() {
-
-                private void iterate(ArrayList<ContentValues> parentFolders) {
-                    for (ContentValues parentFolder : parentFolders)
-                    {
-                        ArrayList<ContentValues> childrenFolders = REST.search(parentFolder.getAsString(UT.GDID), null, "application/vnd.google-apps.folder");
-                        if (childrenFolders != null && childrenFolders.size() > 0)
-                        {
-                            iterate(childrenFolders);
-                        }
-                        accountFolders.add(parentFolder);
-                    }
+        private void iterate(ArrayList<ContentValues> parentFolders) {
+            for (ContentValues parentFolder : parentFolders)
+            {
+                ArrayList<ContentValues> childrenFolders = REST.search(parentFolder.getAsString(UT.GDID), null, "application/vnd.google-apps.folder", "id,mimeType,trashed,name");
+                if (childrenFolders != null && childrenFolders.size() > 0)
+                {
+                    iterate(childrenFolders);
                 }
+                accountFolders.add(parentFolder);
+            }
+        }
 
-                @Override
-                protected Void doInBackground(Void... params) {
-                    mBusy = true;
-                    ArrayList<ContentValues> rootFolders = REST.search("root", null, "application/vnd.google-apps.folder");
-                    if (rootFolders != null && rootFolders.size() > 0 )
-                        iterate(rootFolders);
-                    return null;
-                }
+        @Override
+        protected Void doInBackground(Void... params) {
+            mBusy = true;
+            ArrayList<ContentValues> rootFolders = REST.search("root", null, "application/vnd.google-apps.folder", "id,mimeType,trashed,name");
+            if (rootFolders != null && rootFolders.size() > 0 )
+                iterate(rootFolders);
+            return null;
+        }
 
-                @Override
-                protected void onProgressUpdate(String... strings) {
-                    super.onProgressUpdate(strings);
-                }
-
-                @Override
-                protected void onPostExecute(Void params) {
-                    super.onPostExecute(params);
-                }
-            }.execute();
+        @Override
+        protected void onPostExecute(Void params)
+        {
+            super.onPostExecute(params);
+            new ParseContentValuesTask().execute(accountFolders);
         }
     }
 
@@ -457,7 +295,9 @@ public class ApiConnector extends FragmentActivity
         {
             for (ContentValues folder : params[0])
             {
-                ArrayList<ContentValues> photos = REST.search(folder.getAsString(UT.GDID), null, "application/vnd.google-apps.application/vnd.google-apps.photo");
+                ArrayList<ContentValues> photos = REST.search(folder.getAsString(UT.GDID), null,
+                        "application/vnd.google-apps.photo", "id,name,mimeType,imageMediaMetadata,alternateLink,thumbnailLink");
+
                 for (ContentValues photo : photos)
                     accountPhotos.add(photo);
             }
@@ -469,51 +309,6 @@ public class ApiConnector extends FragmentActivity
         {
             super.onPostExecute(params);
             mBusy = false;
-        }
-    }
-
-    /**
-     *  scans folder tree created by this app deleting folders / files in the process
-     */
-    private void deleteTree() {
-        if (!mBusy) {
-            //mDispTxt.setText("DELETING\n");
-            new AsyncTask<Void, String, Void>() {
-
-                private void iterate(ContentValues gfParent) {
-                    ArrayList<ContentValues> cvs = REST.search(gfParent.getAsString(UT.GDID), null, null);
-                    if (cvs != null) for (ContentValues cv : cvs) {
-                        String titl = cv.getAsString(UT.TITL);
-                        String gdid = cv.getAsString(UT.GDID);
-                    }
-                }
-
-                @Override
-                protected Void doInBackground(Void... params) {
-                    mBusy = true;
-                    ArrayList<ContentValues> gfMyRoot = REST.search("root", UT.MYROOT, null);
-                    if (gfMyRoot != null && gfMyRoot.size() == 1 ){
-                        ContentValues cv = gfMyRoot.get(0);
-                        iterate(cv);
-                        String titl = cv.getAsString(UT.TITL);
-                        String gdid = cv.getAsString(UT.GDID);
-                    }
-                    return null;
-                }
-
-                @Override
-                protected void onProgressUpdate(String... strings) {
-                    super.onProgressUpdate(strings);
-                    //mDispTxt.append("\n" + strings[0]);
-                }
-
-                @Override
-                protected void onPostExecute(Void nada) {
-                    super.onPostExecute(nada);
-                    //mDispTxt.append("\n\nDONE");
-                    mBusy = false;
-                }
-            }.execute();
         }
     }
 

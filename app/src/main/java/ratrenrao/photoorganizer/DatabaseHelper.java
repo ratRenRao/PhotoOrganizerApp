@@ -37,7 +37,7 @@ class DatabaseHelper
             db.close();
     }
 
-    public long insertPicture(String id, String title, String mimeType, String alternateLink, String thumbnailLink)
+    public long insertPicture(String id, String title, String mimeType, String alternateLink, String thumbnailLink, String latitude, String longitude)
     {
         boolean exists = db.query("pictures", null, "id=" + id, null, null, null, null) == null
                 ? false : true;
@@ -49,6 +49,8 @@ class DatabaseHelper
             newPicture.put("mimeType", mimeType);
             newPicture.put("alternateLink", alternateLink);
             newPicture.put("thumbnailLink", thumbnailLink);
+            newPicture.put("lattitude", latitude);
+            newPicture.put("longitude", longitude);
 
             open();
             long _id = db.insert("pictures", null, newPicture);
@@ -114,7 +116,9 @@ class DatabaseHelper
                     + "title TEXT,"
                     + "mimeType TEXT,"
                     + "alternateLink TEXT,"
-                    + "thumbnailLink TEXT;";
+                    + "thumbnailLink TEXT,"
+                    + "latitude TEXT,"
+                    + "longitude TEXT;";
 
             db.execSQL(createQuery);
         }
@@ -129,7 +133,9 @@ class DatabaseHelper
                     + "title TEXT,"
                     + "mimeType TEXT,"
                     + "alternateLink TEXT,"
-                    + "thumbnailLink TEXT;";
+                    + "thumbnailLink TEXT,"
+                    + "latitude TEXT,"
+                    + "longitude TEXT;";
 
             db.execSQL(createQuery);
         }
@@ -144,6 +150,8 @@ class DatabaseHelper
         String mimeType;
         String alternateLink;
         String thumbnailLink;
+        String latitude;
+        String longitude;
     }
 }
 

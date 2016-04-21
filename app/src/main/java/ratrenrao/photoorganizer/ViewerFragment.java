@@ -2,7 +2,6 @@ package ratrenrao.photoorganizer;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
-import android.widget.SimpleCursorAdapter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -21,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -125,7 +122,7 @@ public class ViewerFragment extends Fragment
                 pictures = parsePictureJson(result);
                 for (DatabaseHelper.Picture picture : pictures)
                 {
-                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.alternateLink, picture.thumbnailLink);
+                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.alternateLink, picture.thumbnailLink, picture.latitude, picture.longitude);
                     //new GetAssignmentsApi().execute(new Long[]{Long.parseLong(picture.id), rowId});
                 }
             } catch (Exception ignored)

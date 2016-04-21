@@ -10,22 +10,18 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.FileContent;
-import com.google.api.client.http.GenericUrl;
-//import com.google.api.client.gson.GsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-//import com.google.api.services.drive.model.ParentReference;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
+
+//import com.google.api.client.gson.GsonFactory;
+//import com.google.api.services.drive.model.ParentReference;
 
 final class REST { private REST() {}
     interface ConnectCBs {
@@ -109,7 +105,7 @@ final class REST { private REST() {}
      * @param mime    file/folder mime type (optional)
      * @return        arraylist of found objects
      */
-    static ArrayList<ContentValues> search(String prnId, String titl, String mime) {
+    static ArrayList<ContentValues> search(String prnId, String titl, String mime, String fields) {
         ArrayList<ContentValues> gfs = new ArrayList<>();
         if (mGOOSvc != null && mConnected) try {
             // add query conditions, build query
@@ -119,7 +115,7 @@ final class REST { private REST() {}
             if (mime != null) qryClause += "mimeType = '" + mime + "' and ";
             qryClause = qryClause.substring(0, qryClause.length() - " and ".length());
             Drive.Files.List qry = mGOOSvc.files().list().setQ(qryClause)
-                    .setFields("files(id,mimeType,trashed,name),nextPageToken");
+                    .setFields("files(" + fields + "),nextPageToken");
             String npTok = null;
             if (qry != null) do {
                 FileList gLst = qry.execute();

@@ -49,7 +49,7 @@ class DatabaseHelper
             newPicture.put("mimeType", mimeType);
             newPicture.put("alternateLink", alternateLink);
             newPicture.put("thumbnailLink", thumbnailLink);
-            newPicture.put("lattitude", latitude);
+            newPicture.put("latitude", latitude);
             newPicture.put("longitude", longitude);
 
             open();
@@ -61,24 +61,34 @@ class DatabaseHelper
         return 0;
     }
 
-    public void updatePicture(long _id, String id, String title, String mimeType, String alternateLink, String thumbnailLink)
+    public void insertOrUpdatePicture(String id, String title, String mimeType, String alternateLink, String thumbnailLink, String latitude, String longitude)
+    {
+        if(getPicture(id).getCount() > 0)
+            updatePicture(id, title, mimeType, alternateLink, thumbnailLink, latitude, longitude);
+        else
+            insertPicture(id, title, mimeType, alternateLink, thumbnailLink, latitude, longitude);
+    }
+
+    public void updatePicture(String id, String title, String mimeType, String alternateLink, String thumbnailLink, String latitude, String longitude)
     {
         ContentValues editPicture = new ContentValues();
         editPicture.put("id", id);
-        editPicture.put("name", title);
+        editPicture.put("title", title);
         editPicture.put("mimeType", mimeType);
         editPicture.put("alternateLink", alternateLink);
         editPicture.put("thumbnailLink", thumbnailLink);
+        editPicture.put("latitude", latitude);
+        editPicture.put("longitude", longitude);
 
         open();
-        db.update("pictures", editPicture, "_id=" + _id, null);
+        db.update("pictures", editPicture, "id=" + id, null);
         close();
     }
 
-    public Cursor getPicture(long id)
+    public Cursor getPicture(String id)
     {
         return db.query(
-                "pictures", null, "_id=" + Long.toString(id), null, null, null, null);
+                "pictures", null, "_id=" + id, null, null, null, null);
     }
 
     public void deletePicture(long id)
@@ -97,7 +107,7 @@ class DatabaseHelper
 
     public Cursor getAllPictures()
     {
-        return db.query("pictures", new String[]{"_id", "title"}, null, null, null, null, "title");
+        return db.query("pictures", new String[]{"id", "title"}, null, null, null, null, "title");
     }
 
     private class DatabaseOpenHelper extends SQLiteOpenHelper

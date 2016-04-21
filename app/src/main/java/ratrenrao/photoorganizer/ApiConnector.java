@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.IntentSender;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
@@ -67,115 +68,10 @@ public class ApiConnector extends FragmentActivity
 
     }
 
-    protected void checkForAppFolder()
-    {
-        //new CheckForAppFolderTask().execute();
-    }
-
     protected void parsePhotoData()
     {
         new GetContentValuesTask().execute();
     }
-
-    /*
-    public class CheckForAppFolderTask extends AsyncTask<Void, Void, MetadataBufferResult>
-    {
-        MetadataBufferResult result;
-
-        @Override
-        protected MetadataBufferResult doInBackground(Void... params)
-        {
-            try
-            {
-                Query query = new Query.Builder()
-                        .addFilter(Filters.eq(SearchableField.TITLE, "PhotoOrganizerApp"))
-                        .build();
-
-                result = Drive.DriveApi.query(mGoogleApiClient, query).await();
-            }
-            catch (Exception e) {}
-
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(MetadataBufferResult result)
-        {
-            super.onPostExecute(result);
-
-            if (result.getMetadataBuffer().getCount() <= 0)
-                new CreateAppFolderTask().execute();
-            else
-                new GetPhotosTask().execute();
-        }
-    }
-
-    public class GetPhotosTask extends AsyncTask<Void, Void, MetadataBufferResult>
-    {
-        MetadataBufferResult result;
-
-        @Override
-        protected MetadataBufferResult doInBackground(Void... params)
-        {
-            try
-            {
-            }
-            catch (Exception e) {}
-
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(MetadataBufferResult result)
-        {
-            super.onPostExecute(result);
-
-        }
-    }
-
-    public class CreateAppFolderTask extends AsyncTask<Void, Void, Void>
-    {
-        ResultCallback<DriveFolder.DriveFolderResult> folderCreatedCallback = new
-                ResultCallback<DriveFolder.DriveFolderResult>() {
-                    @Override
-                    public void onResult(DriveFolder.DriveFolderResult result) {
-                        if (!result.getStatus().isSuccess()) {
-                            //showMessage("Error while trying to create the folder");
-                            return;
-                        }
-                        //showMessage("Created a folder: " + result.getDriveFolder().getDriveId());
-                    }
-                };
-
-        @Override
-        protected Void doInBackground(Void... params)
-        {
-            try
-            {
-                MetadataChangeSet changeSet = new MetadataChangeSet.Builder()
-                        .setTitle("PhotoOrganizerApp").build();
-
-                Drive.DriveApi.getRootFolder(mGoogleApiClient).createFolder(
-                        mGoogleApiClient, changeSet).setResultCallback(folderCreatedCallback);
-            }
-            catch (Exception e) {}
-
-            return null;
-        }
-    }
-
-    protected void createAppFolder()
-    {
-        MetadataChangeSet fileMetadata = new MetadataChangeSet.Builder()
-                .setTitle("PhotoOrganizer")
-                .setMimeType("application/vnd.google-apps.folder")
-                .build();
-
-        Drive.DriveApi.newCreateFileActivityBuilder()
-                .setInitialMetadata(fileMetadata)
-                .build(mGoogleApiClient);
-    }
-    */
 
     private Metadata[] parseMetadataJson(String rawJson)
     {
@@ -296,7 +192,7 @@ public class ApiConnector extends FragmentActivity
             for (ContentValues folder : params[0])
             {
                 ArrayList<ContentValues> photos = REST.search(folder.getAsString(UT.GDID), null,
-                        "application/vnd.google-apps.photo", "id,name,mimeType,imageMediaMetadata,alternateLink,thumbnailLink");
+                        "application/vnd.google-apps.photo", "id,name,mimeType,imageMediaMetadata,webContentLink,thumbnailLink,downloadUrl,latitude,longitude");
 
                 for (ContentValues photo : photos)
                     accountPhotos.add(photo);
@@ -308,8 +204,34 @@ public class ApiConnector extends FragmentActivity
         protected void onPostExecute(Void params)
         {
             super.onPostExecute(params);
+            insertOrUpdatePhotos(accountPhotos);
             mBusy = false;
         }
+    }
+
+    private void insertOrUpdatePhotos(ArrayList<ContentValues> photos)
+    {
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this);
+
+        databaseHelper.open();
+
+        try
+        {
+            for (ContentValues photo : photos)
+            {
+                String id = photo.get("id").toString();
+                String title = photo.get("title").toString();
+                String mimeType = photo.get("mimeType").toString();
+                String alternateLink = photo.get("alternateLink").toString();
+                String thumbnailLink = photo.get("thumbnailLink").toString();
+                String latitude = photo.get("latitude").toString();
+                String longitude = photo.get("longitude").toString();
+
+                databaseHelper.insertOrUpdatePicture(id, title, mimeType, alternateLink, thumbnailLink, latitude, longitude);
+            }
+        }
+        catch (Exception e) {}
+
     }
 
     private void suicide(int rid) {

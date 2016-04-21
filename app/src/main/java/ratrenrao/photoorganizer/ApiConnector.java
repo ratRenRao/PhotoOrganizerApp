@@ -438,6 +438,7 @@ public class ApiConnector extends FragmentActivity
                 @Override
                 protected void onProgressUpdate(String... strings) {
                     super.onProgressUpdate(strings);
+                    new ParseContentValuesTask().execute(accountFolders);
                 }
 
                 @Override

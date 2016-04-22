@@ -100,36 +100,68 @@ final class REST { private REST() {}
 
     /************************************************************************************************
      * find file/folder in GOODrive
-     * @param prnId   parent ID (optional), null searches full drive, "root" searches Drive root
-     * @param titl    file/folder name (optional)
-     * @param mime    file/folder mime type (optional)
      * @return        arraylist of found objects
      */
-    static ArrayList<ContentValues> search(String prnId, String titl, String mime, String fields) {
-        ArrayList<ContentValues> gfs = new ArrayList<>();
-        if (mGOOSvc != null && mConnected) try {
-            // add query conditions, build query
-            String qryClause = "'me' in owners and ";
-            if (prnId != null) qryClause += "'" + prnId + "' in parents and ";
-            if (titl != null) qryClause += "title = '" + titl + "' and ";
-            if (mime != null) qryClause += "mimeType = '" + mime + "' and ";
-            qryClause = qryClause.substring(0, qryClause.length() - " and ".length());
-            Drive.Files.List qry = mGOOSvc.files().list().setQ(qryClause)
-                    .setFields("files(" + fields + "),nextPageToken");
-            String npTok = null;
-            if (qry != null) do {
-                FileList gLst = qry.execute();
-                if (gLst != null) {
-                    for (File gFl : gLst.getFiles()) {
-                        //if (gFl.getLabels().getTrashed()) continue;
-                        gfs.add( UT.newCVs(gFl.getName(), gFl.getId(), gFl.getMimeType()));
-                    }                                                                 //else UT.lg("failed " + gFl.getTitle());
-                    npTok = gLst.getNextPageToken();
-                    qry.setPageToken(npTok);
+    static ArrayList<File> search(String[] parentIds, String[] ids, String[] mimeTypes, String fields)
+    {
+        ArrayList<File> files = new ArrayList<>();
+        String parentIdsString = "";
+        String titlesString = "";
+        String mimeTypesString = "";
+        String fieldsString = "";
+
+        if (mGOOSvc != null && mConnected)
+        {
+            String query = "'me' in owners";
+            if (parentIds != null)
+                query += " and " + buildQuerySubsetFromArrayList(parentIds, "in parents", "=", false);
+            if (ids != null)
+                query += " and " + buildQuerySubsetFromArrayList(ids, "id", "=", true);
+            if (mimeTypes != null)
+                query += " and " + buildQuerySubsetFromArrayList(mimeTypes, "mimeType", "contains", true);
+
+            try
+            {
+                Drive.Files.List qry = mGOOSvc.files().list().setQ(query)
+                        .setFields("files(" + fields + "),nextPageToken");
+                String npTok = null;
+                if (qry != null) do
+                {
+                    FileList gLst = qry.execute();
+                    if (gLst != null)
+                    {
+                        for (File file : gLst.getFiles())
+                        {
+                            //if (gFl.getLabels().getTrashed()) continue;
+                            //files.add(UT.newCVs(file.getName(), file.getId(), file.getMimeType()));
+
+                            files.add(file);
+                        }                                                                 //else UT.lg("failed " + gFl.getTitle());
+                        npTok = gLst.getNextPageToken();
+                        qry.setPageToken(npTok);
+                    }
                 }
-            } while (npTok != null && npTok.length() > 0);                     //UT.lg("found " + vlss.size());
-        } catch (Exception e) { UT.le(e); }
-        return gfs;
+                while (npTok != null && npTok.length() > 0);                     //UT.lg("found " + vlss.size());
+            } catch (Exception e)
+            {
+                UT.le(e);
+            }
+        }
+
+        return files;
+    }
+
+    static String buildQuerySubsetFromArrayList(String[] list, String parameter, String operator, boolean paramSearch)
+    {
+        String result = "(";
+        if (paramSearch)
+            for (String value : list)
+                result += parameter + " " + operator + " '" + value + "' or ";
+        else
+            for (String value : list)
+                result += "'" + value + "' " + parameter + " or ";
+
+        return result.substring(0, result.length() - 4) + ")";
     }
 }
 

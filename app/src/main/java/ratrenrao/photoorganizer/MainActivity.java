@@ -2,6 +2,7 @@ package ratrenrao.photoorganizer;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Configuration;
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity
     //private static TextView mDispTxt;
     private static boolean mBusy;
 
+    public Context context;
+
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
@@ -88,6 +91,8 @@ public class MainActivity extends AppCompatActivity
         tagFragment = new TagFragment();
         filterFragment = new FilterFragment();
         apiConnector = new ApiConnector();
+
+        context = this;
 
         addDrawer();
 
@@ -234,10 +239,7 @@ public class MainActivity extends AppCompatActivity
                                 .commit();
                         break;
                     case 1:
-                        //viewerFragment.importPhoto();
-                        //REST.connect();
-                        apiConnector.parsePhotoData();
-                        //REST.disconnect();
+                        apiConnector.parsePhotoData(context);
                         break;
                     case 2:
                         getSupportFragmentManager().beginTransaction()

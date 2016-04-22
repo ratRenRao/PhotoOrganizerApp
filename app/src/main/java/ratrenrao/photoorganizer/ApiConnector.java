@@ -2,11 +2,15 @@ package ratrenrao.photoorganizer;
 
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.IntentSender;
+import android.database.SQLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
@@ -16,17 +20,18 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.drive.Drive;
+import com.google.api.services.drive.model.File;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 
-public class ApiConnector extends FragmentActivity
+public class ApiConnector extends AppCompatActivity
         implements OnConnectionFailedListener,
         REST.ConnectCBs
 {
@@ -42,7 +47,7 @@ public class ApiConnector extends FragmentActivity
     private static final int REQ_CONNECT = 2;
 
     private static boolean mBusy;
-
+    private Context mainActivityContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -68,8 +73,9 @@ public class ApiConnector extends FragmentActivity
 
     }
 
-    protected void parsePhotoData()
+    protected void parsePhotoData(Context context)
     {
+        mainActivityContext = context;
         new GetContentValuesTask().execute();
     }
 
@@ -139,24 +145,14 @@ public class ApiConnector extends FragmentActivity
 
     }
 
-
-    /**
-     @Override
-     public void onConnOK()
-     {
-
-     }
-     *  scans folder tree created by this app listing folders / files, updating file's
-     *  'description' meadata in the process
-     */
-    public class GetContentValuesTask extends AsyncTask<Void, Void, Void>
+    private class GetContentValuesTask extends AsyncTask<Void, Void, Void>
     {
-        final ArrayList<ContentValues> accountFolders = new ArrayList<>();
+        final ArrayList<File> accountFolders = new ArrayList<>();
 
-        private void iterate(ArrayList<ContentValues> parentFolders) {
-            for (ContentValues parentFolder : parentFolders)
+        private void iterate(ArrayList<File> parentFolders) {
+            for (File parentFolder : parentFolders)
             {
-                ArrayList<ContentValues> childrenFolders = REST.search(parentFolder.getAsString(UT.GDID), null, "application/vnd.google-apps.folder", "id,mimeType,trashed,name");
+                ArrayList<com.google.api.services.drive.model.File> childrenFolders = REST.search(new String[]{parentFolder.getId()}, null, new String[]{"application/vnd.google-apps.folder"}, "id,mimeType,trashed,name");
                 if (childrenFolders != null && childrenFolders.size() > 0)
                 {
                     iterate(childrenFolders);
@@ -168,7 +164,7 @@ public class ApiConnector extends FragmentActivity
         @Override
         protected Void doInBackground(Void... params) {
             mBusy = true;
-            ArrayList<ContentValues> rootFolders = REST.search("root", null, "application/vnd.google-apps.folder", "id,mimeType,trashed,name");
+            ArrayList<File> rootFolders = REST.search(new String[]{"root"}, null, new String[]{"application/vnd.google-apps.folder"}, "id,mimeType,trashed,name");
             if (rootFolders != null && rootFolders.size() > 0 )
                 iterate(rootFolders);
             return null;
@@ -182,21 +178,20 @@ public class ApiConnector extends FragmentActivity
         }
     }
 
-    public class ParseContentValuesTask extends AsyncTask<ArrayList<ContentValues>, Void, Void>
+    private class ParseContentValuesTask extends AsyncTask<ArrayList<File>, Void, Void>
     {
-        final ArrayList<ContentValues> accountPhotos = new ArrayList<>();
+        ArrayList<File> accountPhotos;
 
         @Override
-        protected Void doInBackground(ArrayList<ContentValues>... params)
+        protected Void doInBackground(ArrayList<File>... params)
         {
-            for (ContentValues folder : params[0])
-            {
-                ArrayList<ContentValues> photos = REST.search(folder.getAsString(UT.GDID), null,
-                        "application/vnd.google-apps.photo", "id,name,mimeType,imageMediaMetadata,webContentLink,thumbnailLink,downloadUrl,latitude,longitude");
+            String[] folderArray = new String[params[0].size()];
+            for (int i = 0; i < folderArray.length; i++)
+                folderArray[i] = params[0].get(i).getId();
 
-                for (ContentValues photo : photos)
-                    accountPhotos.add(photo);
-            }
+            accountPhotos = REST.search(folderArray, null,
+                    new String[]{"application/vnd.google-apps.photo", "image/"}, "id,name,mimeType,imageMediaMetadata,webContentLink,thumbnailLink");
+
             return null;
         }
 
@@ -209,29 +204,43 @@ public class ApiConnector extends FragmentActivity
         }
     }
 
-    private void insertOrUpdatePhotos(ArrayList<ContentValues> photos)
+    private void insertOrUpdatePhotos(ArrayList<File> photos)
     {
-        final DatabaseHelper databaseHelper = new DatabaseHelper(this);
-
-        databaseHelper.open();
+        final DatabaseHelper databaseHelper = new DatabaseHelper(mainActivityContext);
+        //databaseHelper.open();
 
         try
         {
-            for (ContentValues photo : photos)
+            for (File photo : photos)
             {
-                String id = photo.get("id").toString();
-                String title = photo.get("title").toString();
-                String mimeType = photo.get("mimeType").toString();
-                String alternateLink = photo.get("alternateLink").toString();
-                String thumbnailLink = photo.get("thumbnailLink").toString();
-                String latitude = photo.get("latitude").toString();
-                String longitude = photo.get("longitude").toString();
-
-                databaseHelper.insertOrUpdatePicture(id, title, mimeType, alternateLink, thumbnailLink, latitude, longitude);
+                String id = tryGet(photo, "id");
+                String title = tryGet(photo, "name");
+                String mimeType = tryGet(photo, "mimeType");
+                String imageMediaMetadata = tryGet(photo, "imageMediaMetadata");
+                String webContentLink = tryGet(photo, "webContentLink");
+                String thumbnailLink = tryGet(photo, "thumbnailLink");
+                String location = tryGet(photo, "location");
+                String latitude = tryGet(photo, "latitude");
+                String longitude = tryGet(photo, "longitude");
+                databaseHelper.insertOrUpdatePicture(id, title, mimeType, imageMediaMetadata, webContentLink, thumbnailLink, latitude, longitude);
             }
+        } catch (Exception e)
+        {
+            Debug.getLoadedClassCount();
         }
-        catch (Exception e) {}
+    }
 
+    private String tryGet(File file, String parameter)
+    {
+        String value = "";
+        try
+        {
+            value = file.get(parameter).toString();
+        }
+        finally
+        {
+            return value;
+        }
     }
 
     private void suicide(int rid) {

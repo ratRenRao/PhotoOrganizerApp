@@ -113,7 +113,7 @@ public class ViewerFragment extends Fragment
         {
             super.onPostExecute(result);
 
-            databaseHelper.open();
+            //databaseHelper.open();
 
             try
             {
@@ -122,7 +122,7 @@ public class ViewerFragment extends Fragment
                 pictures = parsePictureJson(result);
                 for (DatabaseHelper.Picture picture : pictures)
                 {
-                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.alternateLink, picture.thumbnailLink, picture.latitude, picture.longitude);
+                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.imageMediaMetadata, picture.webContentLink, picture.thumbnailLink, picture.latitude, picture.longitude);
                     //new GetAssignmentsApi().execute(new Long[]{Long.parseLong(picture.id), rowId});
                 }
             } catch (Exception ignored)
@@ -131,7 +131,7 @@ public class ViewerFragment extends Fragment
             }
 
             updatePictureGrid();
-            databaseHelper.close();
+            //databaseHelper.close();
         }
     }
 
@@ -148,7 +148,7 @@ public class ViewerFragment extends Fragment
         @Override
         protected Cursor doInBackground(Object... params)
         {
-            databaseHelper.open();
+            //databaseHelper.open();
             return databaseHelper.getAllPictures();
         }
 
@@ -156,10 +156,11 @@ public class ViewerFragment extends Fragment
         protected void onPostExecute(Cursor result)
         {
             pictureAdapter.changeCursor(result);
-            databaseHelper.close();
+            //databaseHelper.close();
         }
     }
 
+    /*
     protected void importPhoto()
     {
         new FileChooser(getActivity()).setFileListener(new FileChooser.FileSelectedListener() {
@@ -168,6 +169,7 @@ public class ViewerFragment extends Fragment
             }
         }).showDialog();
     }
+    */
 
     private DatabaseHelper.Picture[] parsePictureJson(String rawJson)
     {

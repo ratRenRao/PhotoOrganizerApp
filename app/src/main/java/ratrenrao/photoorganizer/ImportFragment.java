@@ -25,11 +25,13 @@ public class ImportFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
 
+        /*
         new FileChooser(getActivity()).setFileListener(new FileChooser.FileSelectedListener() {
             @Override public void fileSelected(final File file) {
                 new ApiConnector().uploadPhoto(file);
             }
         }).showDialog();
+        */
     }
 
     @Override

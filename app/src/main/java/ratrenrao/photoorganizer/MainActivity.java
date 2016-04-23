@@ -48,7 +48,8 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity
     implements OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks,
-        REST.ConnectCBs
+        REST.ConnectCBs,
+        ApiConnector.ApiConnectorListener
 {
 
     private ListView mDrawerList;
@@ -105,15 +106,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        /*
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Drive.API)
-                .addScope(Drive.SCOPE_FILE)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-                */
-
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
             viewerFragment = new ViewerFragment();
@@ -128,52 +120,6 @@ public class MainActivity extends AppCompatActivity
         super.onStart();
         //mGoogleApiClient.connect();
     }
-
-    /*
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        switch (requestCode) {
-            case REQUEST_CODE_RESOLUTION:
-                if (resultCode == RESULT_OK) {
-                    mGoogleApiClient.connect();
-                }
-                break;
-        }
-    }
-    */
-
-    /*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_create: {
-                createTree(UT.time2Titl(null));
-                return true;
-            }
-            case R.id.action_list: {
-                testTree();
-                return true;
-            }
-            case R.id.action_delete: {
-                deleteTree();
-                return true;
-            }
-            case R.id.action_account: {
-                mDispTxt.setText("");
-                startActivityForResult(AccountPicker.newChooseAccountIntent(
-                        null, null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null), REQ_ACCPICK);
-                return true;
-            }
-        }
-        return super.onOptionsItemSelected(item);
-    }
-    */
 
     @Override
     protected void onActivityResult(final int request, final int result, final Intent data) {
@@ -392,5 +338,11 @@ public class MainActivity extends AppCompatActivity
         UT.AM.setEmail(null);
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         finish();
+    }
+
+    @Override
+    public void onImportComplete(ArrayList<com.google.api.services.drive.model.File> pictureFiles)
+    {
+        viewerFragment.updateGrid(pictureFiles);
     }
 }

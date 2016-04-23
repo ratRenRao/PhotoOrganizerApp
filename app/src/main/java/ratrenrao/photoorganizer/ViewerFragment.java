@@ -2,6 +2,7 @@ package ratrenrao.photoorganizer;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,178 +16,99 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import com.google.api.services.drive.model.File;
+import java.util.ArrayList;
+import android.content.Intent;
+import android.os.Bundle;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.support.v7.app.ActionBarActivity;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.GridView;
+import android.widget.Toolbar;
 
 import javax.net.ssl.HttpsURLConnection;
 
 
 public class ViewerFragment extends Fragment
+        implements ApiConnector.ApiConnectorListener
 {
     public View view;
     private CursorAdapter pictureAdapter;
     private DatabaseHelper.Picture[] pictures;
+    private GridView gridView;
+    private GridViewAdapter gridAdapter;
 
-    public ViewerFragment()
+    public interface ViewerFragmentListener
     {
-        // Required empty public constructor
+        void onGridViewUpdate(ArrayList<ImageItem> thumbnails);
+        void onImageSelected(ImageItem selectedThumbnail);
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
-    {
-        // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_viewer, container, false);
-        return view;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null)
-        {
-        }
 
-        //int[] to = new int[]{android.R.id.text1};
-
-        //pictureAdapter = new SimpleCursorAdapter(getActivity(), android.R.layout.simple_list_item_1, pictures, to, 0);
+        gridView = (GridView) getActivity().findViewById(R.id.picture_grid);
     }
+
 
     @Override
-    public void onAttach(Context context)
+    public void onImportComplete(ArrayList<File> pictureFiles)
     {
-        super.onAttach(context);
+
     }
 
-    @Override
-    public void onDetach()
+    public void updateGrid(ArrayList<File> pictureFiles)
     {
-        super.onDetach();
-    }
+        gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, LoadAllImages(pictureFiles));
+        gridView.setAdapter(gridAdapter);
 
-    private void onImportPictures()
-    {
-        pictureAdapter.changeCursor(null);
-        new GetPictureData().execute("");
-    }
-
-    public class GetPictureData extends AsyncTask<String, Integer, String>
-    {
-        final DatabaseHelper databaseHelper =
-                new DatabaseHelper(getActivity());
-
-        //final String AUTH_TOKEN = DatabaseHelper.AUTH_TOKEN;
-        String rawJSON = "";
-
-        @Override
-        protected String doInBackground(String... params)
+        gridView.setOnItemClickListener(new OnItemClickListener()
         {
-            try
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
-                URL url = new URL("https://weber.instructure.com/api/v1/courses");
-                HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-              //  conn.setRequestProperty("Authorization", "Bearer " + AUTH_TOKEN);
-                conn.connect();
-                int status = conn.getResponseCode();
-                switch (status)
-                {
-                    case 200:
-                    case 201:
-                        BufferedReader br =
-                                new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        rawJSON = br.readLine();
-                }
-            } catch (IOException e)
-            {
-                Log.d("test", e.getMessage());
+                ImageItem item = (ImageItem) parent.getItemAtPosition(position);
+
+                /*
+                //Create intent
+                Intent intent = new Intent(getContext(), DetailsActivity.class);
+                intent.putExtra("title", item.getTitle());
+                intent.putExtra("image", item.getImage());
+
+                //Start details activity
+                startActivity(intent);
+                */
             }
-            return rawJSON;
-        }
-
-        @Override
-        protected void onPostExecute(String result)
-        {
-            super.onPostExecute(result);
-
-            //databaseHelper.open();
-
-            try
-            {
-            //    databaseHelper.deleteAllCourses();
-            //    databaseHelper.deleteAllAssignments();
-                pictures = parsePictureJson(result);
-                for (DatabaseHelper.Picture picture : pictures)
-                {
-                    long rowId = databaseHelper.insertPicture(picture.id, picture.title, picture.mimeType, picture.imageMediaMetadata, picture.webContentLink, picture.thumbnailLink, picture.latitude, picture.longitude);
-                    //new GetAssignmentsApi().execute(new Long[]{Long.parseLong(picture.id), rowId});
-                }
-            } catch (Exception ignored)
-            {
-
-            }
-
-            updatePictureGrid();
-            //databaseHelper.close();
-        }
+        });
     }
 
-    public void updatePictureGrid()
-    {
-        new GetDbCourse().execute((Object[]) null);
+    private ArrayList<ImageItem> LoadAllImages(ArrayList<File> pictureFiles) {
+        final ArrayList<ImageItem> imageItems = new ArrayList<>();
+        //for (int i = 0; i < thumbnails.length(); i++) {
+        for (File file : pictureFiles)
+        {
+            Drawable thumbnail = LoadImageFromUrl(file.getThumbnailLink());
+            //Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imgs.getResourceId(i, -1));
+            imageItems.add(new ImageItem(thumbnail, file.getName(), file.getId()));
+        }
+        return imageItems;
     }
 
-    private class GetDbCourse extends AsyncTask<Object, Object, Cursor>
-    {
-        final DatabaseHelper databaseHelper =
-                new DatabaseHelper(getActivity());
-
-        @Override
-        protected Cursor doInBackground(Object... params)
-        {
-            //databaseHelper.open();
-            return databaseHelper.getAllPictures();
-        }
-
-        @Override
-        protected void onPostExecute(Cursor result)
-        {
-            pictureAdapter.changeCursor(result);
-            //databaseHelper.close();
+    public static Drawable LoadImageFromUrl(String url) {
+        try {
+            InputStream is = (InputStream) new URL(url).getContent();
+            Drawable drawable = Drawable.createFromStream(is, null);
+            return drawable;
+        } catch (Exception e) {
+            return null;
         }
     }
-
-    /*
-    protected void importPhoto()
-    {
-        new FileChooser(getActivity()).setFileListener(new FileChooser.FileSelectedListener() {
-            @Override public void fileSelected(final File file) {
-                new ApiConnector().uploadPhoto(file);
-            }
-        }).showDialog();
-    }
-    */
-
-    private DatabaseHelper.Picture[] parsePictureJson(String rawJson)
-    {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
-
-        DatabaseHelper.Picture[] parsedPictures = null;
-
-        try
-        {
-            parsedPictures = gson.fromJson(rawJson, DatabaseHelper.Picture[].class);
-        } catch (Exception ignored)
-        {
-
-        }
-
-        return parsedPictures;
-    }
-
 }

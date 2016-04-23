@@ -23,16 +23,21 @@
 
     </FrameLayout>
 
-    <GridLayout
+    <GridView
         android:id="@+id/picture_grid"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:columnCount="2"
-        android:rowCount="1"
-        android:background="@color/colorPhotoBackground"
-        android:layout_gravity="bottom"
-        android:layout_weight="1"/>
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:columnWidth="100dp"
+        android:drawSelectorOnTop="true"
+        android:gravity="center"
+        android:numColumns="auto_fit"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="5dp"
+        android:focusable="true"
+        android:clickable="true"
+        android:layout_weight="1"
+    />
 
 
 </LinearLayout>

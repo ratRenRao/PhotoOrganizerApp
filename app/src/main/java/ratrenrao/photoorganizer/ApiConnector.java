@@ -1,10 +1,13 @@
 package ratrenrao.photoorganizer;
 
 
+import android.app.Activity;
+import android.content.ComponentCallbacks;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.IntentSender;
 import android.database.SQLException;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
@@ -24,6 +27,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.http.HttpTransport;
+import com.google.api.services.drive.model.File.ImageMediaMetadata;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -31,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 
-public class ApiConnector extends AppCompatActivity
+public class ApiConnector extends Activity
         implements OnConnectionFailedListener,
         REST.ConnectCBs
 {
@@ -49,23 +53,21 @@ public class ApiConnector extends AppCompatActivity
     private static boolean mBusy;
     private Context mainActivityContext;
 
+    private ArrayList<File> accountPhotos;
+
+    public interface ApiConnectorListener
+    {
+        void onImportComplete(ArrayList<File> pictureFiles);
+    }
+
+    private ApiConnectorListener apiConnectorListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .enableAutoManage(this, this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                        //.addApi(Drive.API)
-                        //.addScope(Drive.SCOPE_FILE)
-                .build();
-
-        //checkForAppFolder();
+        apiConnectorListener = (ApiConnectorListener) getApplicationContext();
     }
 
     protected void uploadPhoto(File file)
@@ -180,8 +182,6 @@ public class ApiConnector extends AppCompatActivity
 
     private class ParseContentValuesTask extends AsyncTask<ArrayList<File>, Void, Void>
     {
-        ArrayList<File> accountPhotos;
-
         @Override
         protected Void doInBackground(ArrayList<File>... params)
         {
@@ -201,32 +201,39 @@ public class ApiConnector extends AppCompatActivity
             super.onPostExecute(params);
             insertOrUpdatePhotos(accountPhotos);
             mBusy = false;
+            //apiConnectorListener.onImportComplete(accountPhotos);
+            ((ApiConnectorListener) mainActivityContext).onImportComplete(accountPhotos);
         }
-    }
 
-    private void insertOrUpdatePhotos(ArrayList<File> photos)
-    {
-        final DatabaseHelper databaseHelper = new DatabaseHelper(mainActivityContext);
-        //databaseHelper.open();
-
-        try
+        private void insertOrUpdatePhotos(ArrayList<File> photos)
         {
-            for (File photo : photos)
+            final DatabaseHelper databaseHelper = new DatabaseHelper(mainActivityContext);
+            //databaseHelper.open();
+
+            try
             {
-                String id = tryGet(photo, "id");
-                String title = tryGet(photo, "name");
-                String mimeType = tryGet(photo, "mimeType");
-                String imageMediaMetadata = tryGet(photo, "imageMediaMetadata");
-                String webContentLink = tryGet(photo, "webContentLink");
-                String thumbnailLink = tryGet(photo, "thumbnailLink");
-                String location = tryGet(photo, "location");
-                String latitude = tryGet(photo, "latitude");
-                String longitude = tryGet(photo, "longitude");
-                databaseHelper.insertOrUpdatePicture(id, title, mimeType, imageMediaMetadata, webContentLink, thumbnailLink, latitude, longitude);
+                for (File photo : photos)
+                {
+                    String id = tryGet(photo, "id");
+                    String title = tryGet(photo, "name");
+                    String mimeType = tryGet(photo, "mimeType");
+                    String imageMediaMetadata = tryGet(photo, "imageMediaMetadata");
+                    String webContentLink = tryGet(photo, "webContentLink");
+                    String thumbnailLink = tryGet(photo, "thumbnailLink");
+
+                    String latitude = "";
+                    String longitude = "";
+                    if(photo.getImageMediaMetadata().containsKey("location"))
+                    {
+                        latitude = photo.getImageMediaMetadata().getLocation().getLatitude().toString();
+                        longitude = photo.getImageMediaMetadata().getLocation().getLongitude().toString();
+                    }
+                    databaseHelper.insertOrUpdatePicture(id, title, mimeType, imageMediaMetadata, webContentLink, thumbnailLink, latitude, longitude);
+                }
+            } catch (Exception e)
+            {
+                Debug.getLoadedClassCount();
             }
-        } catch (Exception e)
-        {
-            Debug.getLoadedClassCount();
         }
     }
 

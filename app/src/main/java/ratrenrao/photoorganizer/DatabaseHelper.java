@@ -81,7 +81,7 @@ class DatabaseHelper
     {
         SQLiteDatabase db = databaseOpenHelper.getWritableDatabase();
         ContentValues editPicture = new ContentValues();
-        editPicture.put("id", id);
+        //editPicture.put("id", id);
         editPicture.put("name", name);
         editPicture.put("mimeType", mimeType);
         editPicture.put("imageMediaMetadata", imageMediaMetadata);

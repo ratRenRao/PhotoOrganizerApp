@@ -13,13 +13,13 @@ import android.graphics.Bitmap;
 
 import java.util.ArrayList;
 
-public class GridViewAdapter extends ArrayAdapter<ImageItem> {
+public class GridViewAdapter extends ArrayAdapter<Picture> {
 
     private Context context;
     private int layoutResourceId;
-    private ArrayList<ImageItem> data = new ArrayList<ImageItem>();
+    private ArrayList<Picture> data = new ArrayList<>();
 
-    public GridViewAdapter(Context context, int layoutResourceId, ArrayList<ImageItem> data) {
+    public GridViewAdapter(Context context, int layoutResourceId, ArrayList<Picture> data) {
         super(context, layoutResourceId, data);
         this.layoutResourceId = layoutResourceId;
         this.context = context;
@@ -35,7 +35,7 @@ public class GridViewAdapter extends ArrayAdapter<ImageItem> {
             LayoutInflater inflater = ((Activity) context).getLayoutInflater();
             row = inflater.inflate(layoutResourceId, parent, false);
             holder = new ViewHolder();
-            holder.imageTitle = (TextView) row.findViewById(R.id.text);
+            holder.imageName = (TextView) row.findViewById(R.id.text);
             holder.image = (ImageView) row.findViewById(R.id.image);
             row.setTag(holder);
         } else {
@@ -43,14 +43,14 @@ public class GridViewAdapter extends ArrayAdapter<ImageItem> {
         }
 
 
-        ImageItem item = data.get(position);
-        holder.imageTitle.setText(item.getTitle());
+        Picture item = data.get(position);
+        holder.imageName.setText(item.getName());
         holder.image.setImageDrawable(item.getImage());
         return row;
     }
 
     static class ViewHolder {
-        TextView imageTitle;
+        TextView imageName;
         ImageView image;
     }
 }

@@ -1,14 +1,11 @@
 package ratrenrao.photoorganizer;
 
-import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Debug;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -18,38 +15,30 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.drive.Drive;
-import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
-import com.google.api.services.drive.DriveScopes;
 
 import android.accounts.AccountManager;
 import android.widget.Toast;
 
-import java.io.File;
-import java.sql.Connection;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
     implements OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks,
         REST.ConnectCBs,
-        ApiConnector.ApiConnectorListener
+        ApiConnector.ApiConnectorListener,
+        ViewerFragment.ViewerFragmentListener
 {
 
     private ListView mDrawerList;
@@ -81,6 +70,7 @@ public class MainActivity extends AppCompatActivity
     private static boolean mBusy;
 
     public Context context;
+    private CursorAdapter cursorAdapter;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -108,7 +98,6 @@ public class MainActivity extends AppCompatActivity
 
         if (findViewById(R.id.fragmentMainContainer) != null)
         {
-            viewerFragment = new ViewerFragment();
             getSupportFragmentManager().beginTransaction()
                     .add(R.id.fragmentMainContainer, viewerFragment)
                     .commit();
@@ -142,11 +131,22 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(request, result, data);
     }
 
-    private void pickUserAccount() {
-        String[] accountTypes = new String[]{"com.google"};
-        Intent intent = AccountPicker.newChooseAccountIntent(null, null,
-                accountTypes, false, null, null, null, null);
-        startActivityForResult(intent, REQUEST_CODE_PICK_ACCOUNT);
+
+    @Override
+    public void onImportComplete(ArrayList<com.google.api.services.drive.model.File> pictureFiles)
+    {
+        //ArrayList<Picture> pictures = getPicturesFromDb();
+        //viewerFragment.updateGrid(pictureFiles);
+        viewerFragment.updateDisplay();
+    }
+
+    private ArrayList<Picture> getPicturesFromDb()
+    {
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        ArrayList<Picture> pictures = new ArrayList<>();
+        Cursor pictureCursor = databaseHelper.getAllPictures();
+
+        return pictures;
     }
 
     private void addDrawer()
@@ -194,6 +194,7 @@ public class MainActivity extends AppCompatActivity
                                 .commit();
                         break;
                     case 3:
+                        viewerFragment.updateDisplay();
                         //apiConnector.signOut();
                         //apiConnector.signIn();
                         break;
@@ -310,7 +311,14 @@ public class MainActivity extends AppCompatActivity
     // *** connection callbacks ***********************************************************
     @Override
     public void onConnOK() {
-        //mDispTxt.append("\n\nCONNECTED TO: " + UT.AM.getEmail());
+        //if (viewerFragment == null && findViewById(R.id.fragmentMainContainer) != null)
+        //{
+        //    viewerFragment = new ViewerFragment();
+        //    getSupportFragmentManager().beginTransaction()
+        //            .add(R.id.fragmentMainContainer, viewerFragment)
+        //            .commit();
+            viewerFragment.updateDisplay();
+        //}
     }
 
 
@@ -341,8 +349,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onImportComplete(ArrayList<com.google.api.services.drive.model.File> pictureFiles)
+    public void onGridViewUpdate()
     {
-        viewerFragment.updateGrid(pictureFiles);
+        if(getSupportFragmentManager().findFragmentByTag("VF") == null)
+        {
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragmentMainContainer, viewerFragment, "VF")
+                    .commit();
+        }
+        else
+        {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentMainContainer, viewerFragment, "VF")
+                    .commit();
+        }
+    }
+
+    @Override
+    public void onImageSelected(ImageItem selectedThumbnail)
+    {
+
     }
 }

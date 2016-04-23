@@ -3,6 +3,7 @@ package ratrenrao.photoorganizer;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
@@ -10,6 +11,8 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
+import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpResponse;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
@@ -17,6 +20,8 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -162,6 +167,36 @@ final class REST { private REST() {}
                 result += "'" + value + "' " + parameter + " or ";
 
         return result.substring(0, result.length() - 4) + ")";
+    }
+
+    static Drawable downloadContent(String rsid)
+    {
+        //GenericUrl url = new GenericUrl(downloadUrl);
+        InputStream is = null;
+        try
+        {
+            if(rsid != null)
+            {
+                File gFl = mGOOSvc.files().get(rsid).setFields("thumbnailLink").execute();
+                if (gFl != null)
+                {
+                    GenericUrl url = new GenericUrl(gFl.getThumbnailLink());
+                    is = mGOOSvc.getRequestFactory().buildGetRequest(url).execute().getContent();
+                //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
+                //is = response.getContent();
+                Drawable drawable = Drawable.createFromStream(is, null);
+                return drawable;
+                }
+            }
+        } catch (UserRecoverableAuthIOException uraEx) {
+            String tmp = "t";
+        } catch (GoogleAuthIOException gauEx) {
+            String tmp = "t";
+        }
+        catch (Exception e) {
+            String tmp = "t";}
+
+        return null;
     }
 }
 

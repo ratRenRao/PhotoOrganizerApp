@@ -121,7 +121,16 @@ class DatabaseHelper
     public Cursor getAllPictures()
     {
         SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
-        return db.query("pictures", new String[]{"id", "name"}, null, null, null, null, "name");
+        return db.query("pictures",
+                new String[]{"id",
+                    "name",
+                    "mimeType",
+                    "imageMediaMetadata",
+                    "webContentLink",
+                    "thumbnailLink",
+                    "latitude",
+                    "longitude"},
+                null, null, null, null, "name");
     }
 
     class DatabaseOpenHelper extends SQLiteOpenHelper
@@ -167,18 +176,5 @@ class DatabaseHelper
         }
     }
 
-    public class Picture
-
-    {
-        int _id;
-        String id;
-        String title;
-        String mimeType;
-        String imageMediaMetadata;
-        String webContentLink;
-        String thumbnailLink;
-        String latitude;
-        String longitude;
-    }
 }
 

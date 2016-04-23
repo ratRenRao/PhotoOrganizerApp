@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.IntentSender;
 import android.database.SQLException;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
@@ -23,6 +24,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.drive.Drive;
+import com.google.api.client.http.GenericUrl;
 import com.google.api.services.drive.model.File;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -31,8 +33,10 @@ import com.google.api.services.drive.model.File.ImageMediaMetadata;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
 
 
 public class ApiConnector extends Activity
@@ -248,6 +252,32 @@ public class ApiConnector extends Activity
         {
             return value;
         }
+    }
+
+    public Drawable downloadImage(String url)
+    {
+        Drawable image = null;
+        try
+        {
+            image = new DownloadContentTask().execute(url).get();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        } catch (ExecutionException e)
+        {
+            e.printStackTrace();
+        }
+        return image;
+    }
+
+    private class DownloadContentTask extends AsyncTask<String, Void, Drawable>
+    {
+        @Override
+        protected Drawable doInBackground(String... params)
+        {
+            return REST.downloadContent(params[0]);
+        }
+
     }
 
     private void suicide(int rid) {

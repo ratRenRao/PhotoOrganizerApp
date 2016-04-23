@@ -24,9 +24,9 @@
     </FrameLayout>
 
     <GridView
-        android:id="@+id/picture_grid"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:id="@+id/gridView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_margin="5dp"
         android:columnWidth="100dp"
         android:drawSelectorOnTop="true"
@@ -37,7 +37,7 @@
         android:focusable="true"
         android:clickable="true"
         android:layout_weight="1"
-    />
-
-
+        android:layout_gravity="top"
+        android:background="@color/colorPhotoBackground"
+        />
 </LinearLayout>

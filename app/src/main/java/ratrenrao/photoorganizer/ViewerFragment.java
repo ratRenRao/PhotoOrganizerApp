@@ -1,64 +1,161 @@
 package ratrenrao.photoorganizer;
 
+import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.CursorAdapter;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import com.google.api.services.drive.model.File;
 import java.util.ArrayList;
-import android.content.Intent;
-import android.os.Bundle;
+import java.util.concurrent.ExecutionException;
+
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v7.app.ActionBarActivity;
-import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
-import android.widget.Toolbar;
-
-import javax.net.ssl.HttpsURLConnection;
 
 
 public class ViewerFragment extends Fragment
         implements ApiConnector.ApiConnectorListener
 {
-    public View view;
-    private CursorAdapter pictureAdapter;
-    private DatabaseHelper.Picture[] pictures;
     private GridView gridView;
     private GridViewAdapter gridAdapter;
+    private Activity mainActivity;
+    public boolean initialized;
+    private View view;
 
     public interface ViewerFragmentListener
     {
-        void onGridViewUpdate(ArrayList<ImageItem> thumbnails);
+        void onGridViewUpdate();
         void onImageSelected(ImageItem selectedThumbnail);
+    }
+
+    private ViewerFragmentListener viewerFragmentListener;
+
+    public ViewerFragment()
+    {
+        // Required empty public constructor
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState)
+    {
+        // Inflate the layout for this fragment
+        view = inflater.inflate(R.layout.fragment_viewer, container, false);
+        return view;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        gridView = (GridView) getActivity().findViewById(R.id.picture_grid);
+        //viewerFragmentListener = (ViewerFragmentListener) getActivity();
+        //updateDisplay();
+
+        /*
+        gridView.setOnItemClickListener(new OnItemClickListener()
+        {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
+            {
+                ImageItem item = (ImageItem) parent.getItemAtPosition(position);
+
+                //Create intent
+                Intent intent = new Intent(getContext(), DetailsActivity.class);
+                intent.putExtra("title", item.getTitle());
+                intent.putExtra("image", item.getImage());
+
+                //Start details activity
+                startActivity(intent);
+            }
+        });
+        */
     }
 
+    @Override
+    public void onAttach(Context context)
+    {
+        super.onAttach(context);
+        //updateDisplay();
+    }
+
+
+    public void updateDisplay()
+    {
+        //getActivity().setContentView(R.layout.fragment_viewer);
+        gridView = (GridView) getActivity().findViewById(R.id.gridView);
+        gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, getData());
+        gridView.setAdapter(gridAdapter);
+
+        //viewerFragmentListener.onGridViewUpdate();
+    }
+
+    private ArrayList<Picture> getData()
+    {
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this.getContext());
+        ArrayList<Picture> pictures = new ArrayList<>();
+        Cursor cursor = databaseHelper.getAllPictures();
+        try
+        {
+            while (cursor.moveToNext())
+            {
+                String id = cursor.getString(cursor.getColumnIndex("id"));
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String mimeType = cursor.getString(cursor.getColumnIndex("mimeType"));
+                String imageMediaMetadata = cursor.getString(cursor.getColumnIndex("imageMediaMetadata"));
+                String webContentLink = cursor.getString(cursor.getColumnIndex("webContentLink"));
+                String thumbnailLink = cursor.getString(cursor.getColumnIndex("thumbnailLink"));
+                String latitude = cursor.getString(cursor.getColumnIndex("latitude"));
+                String longitude = cursor.getString(cursor.getColumnIndex("longitude"));
+
+                Picture picture = new Picture(
+                        id,
+                        name,
+                        mimeType,
+                        imageMediaMetadata,
+                        webContentLink,
+                        thumbnailLink,
+                        latitude,
+                        longitude
+                );
+                Drawable image = new ApiConnector().downloadImage(picture.getId());
+                picture.setImage(image);
+
+                pictures.add(picture);
+            }
+        }
+        catch (Exception e)
+        {
+            String error = e.toString();
+        }
+        finally
+        {
+            cursor.close();
+        }
+
+        return pictures;
+
+        /*
+        final ArrayList<ImageItem> imageItems = new ArrayList<>();
+        TypedArray imgs = getResources().obtainTypedArray(R.array.image_ids);
+        for (int i = 0; i < imgs.length(); i++) {
+            Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imgs.getResourceId(i, -1));
+            imageItems.add(new ImageItem(bitmap, "Image#" + i));
+        }
+        return imageItems;
+        */
+    }
 
     @Override
     public void onImportComplete(ArrayList<File> pictureFiles)
@@ -66,6 +163,7 @@ public class ViewerFragment extends Fragment
 
     }
 
+    /*
     public void updateGrid(ArrayList<File> pictureFiles)
     {
         gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, LoadAllImages(pictureFiles));
@@ -85,30 +183,8 @@ public class ViewerFragment extends Fragment
 
                 //Start details activity
                 startActivity(intent);
-                */
             }
         });
     }
-
-    private ArrayList<ImageItem> LoadAllImages(ArrayList<File> pictureFiles) {
-        final ArrayList<ImageItem> imageItems = new ArrayList<>();
-        //for (int i = 0; i < thumbnails.length(); i++) {
-        for (File file : pictureFiles)
-        {
-            Drawable thumbnail = LoadImageFromUrl(file.getThumbnailLink());
-            //Bitmap bitmap = BitmapFactory.decodeResource(getResources(), imgs.getResourceId(i, -1));
-            imageItems.add(new ImageItem(thumbnail, file.getName(), file.getId()));
-        }
-        return imageItems;
-    }
-
-    public static Drawable LoadImageFromUrl(String url) {
-        try {
-            InputStream is = (InputStream) new URL(url).getContent();
-            Drawable drawable = Drawable.createFromStream(is, null);
-            return drawable;
-        } catch (Exception e) {
-            return null;
-        }
-    }
+    */
 }

@@ -3,7 +3,7 @@
     <string name="action_settings">Settings</string>
 
     <string name="menu_string">Menu</string>
-    <string name="pictures_header_string">Pictures</string>
+    <string name="pictures_header_string">Images</string>
     <string name="filter_header_string">Filter Options</string>
     <string name="import_header_string">Import Pictures</string>
     <string name="tag_header_string">Add Tag</string>
@@ -20,29 +20,9 @@
     <string name="api_key_import_string">Google Drive Api Key</string>
     <string name="google_change_account_string">Change Google Account</string>
 
-    <string name="disp_text">
-      \n\n
-      1/ UPLOAD (upload icon) uploads a text file to Google Drive, creating a simple tree
-         directory structure in the process.\n
-         The createTree() method allows for testing of different CRUD primitives (search,
-         create folder, etc…) in the process.\n\n
-      2/ DOWNLOAD (download icon) scans the tree created by the createTree() method. If the
-         object is a file, it\'s metadata is updated (description field), the content is
-         downloaded.\n\n
-      3/ DELETE (X - delete icon) scans the tree created by the createTree() method and deletes
-         all the files and folders in the process\n
-    </string>
-
-    <!-- menu -->
-    <string name="action_scan">UPLOAD file</string>
-    <string name="action_list">DOWNLOAD all files</string>
-    <string name="action_delete">DELETE all files</string>
-    <string name="action_account">Select Google Account…</string>
-
     <string name="err_auth_sha">CHECK PackageName / SHA1\nin Developers Console!</string>
     <string name="err_auth_dono">UNSPECIFIED GOOGLE DRIVE\nACCESS FAILURE!</string>
     <string name="err_auth_accpick">NO ACCOUNT SELECTED!</string>
     <string name="err_auth_nogo">ACCESS NOT AUTHORIZED!</string>
     <string name="hello_blank_fragment">m</string>
-    s
 </resources>

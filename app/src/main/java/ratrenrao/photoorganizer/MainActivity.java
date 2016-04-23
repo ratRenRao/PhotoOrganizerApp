@@ -47,7 +47,6 @@ public class MainActivity extends AppCompatActivity
     private ActionBarDrawerToggle mDrawerToggle;
     private String mActivityTitle;
     private ViewerFragment viewerFragment;
-    private ImportFragment importFragment;
     private TagFragment tagFragment;
     private FilterFragment filterFragment;
     private ApiConnector apiConnector;
@@ -78,7 +77,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         viewerFragment = new ViewerFragment();
-        importFragment = new ImportFragment();
         tagFragment = new TagFragment();
         filterFragment = new FilterFragment();
         apiConnector = new ApiConnector();
@@ -366,7 +364,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onImageSelected(ImageItem selectedThumbnail)
+    public void onImageSelected(Picture selectedThumbnail)
     {
 
     }

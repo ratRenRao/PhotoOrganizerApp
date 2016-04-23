@@ -2,6 +2,7 @@ package ratrenrao.photoorganizer;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -38,7 +39,7 @@ public class ViewerFragment extends Fragment
     public interface ViewerFragmentListener
     {
         void onGridViewUpdate();
-        void onImageSelected(ImageItem selectedThumbnail);
+        void onImageSelected(Picture selectedThumbnail);
     }
 
     private ViewerFragmentListener viewerFragmentListener;
@@ -97,6 +98,21 @@ public class ViewerFragment extends Fragment
         gridView = (GridView) getActivity().findViewById(R.id.gridView);
         gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, getData());
         gridView.setAdapter(gridAdapter);
+
+        gridView.setOnItemClickListener(new OnItemClickListener()
+        {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
+            {
+                Picture item = (Picture) parent.getItemAtPosition(position);
+
+                //Create intent
+                Intent intent = new Intent(getContext(), ImageViewer.class);
+                intent.putExtra("id", item.getId());
+
+                //Start details activity
+                startActivity(intent);
+            }
+        });
 
         //viewerFragmentListener.onGridViewUpdate();
     }

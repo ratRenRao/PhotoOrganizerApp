@@ -57,7 +57,7 @@ public class ApiConnector extends Activity
     private static boolean mBusy;
     private Context mainActivityContext;
 
-    private ArrayList<File> accountPhotos;
+    private static ArrayList<File> accountPhotos;
 
     public interface ApiConnectorListener
     {

@@ -8,7 +8,9 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 
@@ -28,13 +30,22 @@ import android.widget.GridView;
 
 
 public class ViewerFragment extends Fragment
-        implements ApiConnector.ApiConnectorListener
+        implements ApiConnector.ApiConnectorListener,
+        ImageViewerActivity.ImageViewerActivityInterface
 {
     private GridView gridView;
     private GridViewAdapter gridAdapter;
     private Activity mainActivity;
     public boolean initialized;
     private View view;
+    private ArrayList<Picture> filteredPictures = new ArrayList<>();
+    private ArrayList<String> urlStrings = new ArrayList<>();
+
+    @Override
+    public ArrayList<Picture> getPictureData()
+    {
+        return filteredPictures;
+    }
 
     public interface ViewerFragmentListener
     {
@@ -61,27 +72,6 @@ public class ViewerFragment extends Fragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        //viewerFragmentListener = (ViewerFragmentListener) getActivity();
-        //updateDisplay();
-
-        /*
-        gridView.setOnItemClickListener(new OnItemClickListener()
-        {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id)
-            {
-                ImageItem item = (ImageItem) parent.getItemAtPosition(position);
-
-                //Create intent
-                Intent intent = new Intent(getContext(), DetailsActivity.class);
-                intent.putExtra("title", item.getTitle());
-                intent.putExtra("image", item.getImage());
-
-                //Start details activity
-                startActivity(intent);
-            }
-        });
-        */
     }
 
     @Override
@@ -105,10 +95,12 @@ public class ViewerFragment extends Fragment
             {
                 Picture item = (Picture) parent.getItemAtPosition(position);
 
+                //new ImageViewerActivity();
                 //Create intent
-                Intent intent = new Intent(getContext(), ImageViewer.class);
-                intent.putExtra("id", item.getId());
-
+                ImageViewerActivity.setFilteredPictures(filteredPictures);
+                Intent intent = new Intent(getActivity(), ImageViewerActivity.class);
+                intent.putExtra("position", position);
+                //intent.putExtra("id", item.getId());
                 //Start details activity
                 startActivity(intent);
             }
@@ -147,9 +139,9 @@ public class ViewerFragment extends Fragment
                 );
                 Drawable image = new ApiConnector().downloadImage(picture.getId());
                 picture.setImage(image);
-
                 pictures.add(picture);
             }
+            filteredPictures = pictures;
         }
         catch (Exception e)
         {

@@ -1,11 +1,13 @@
 package ratrenrao.photoorganizer;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,20 +25,19 @@ import java.util.ArrayList;
 public class ImageViewer extends Fragment {
 
     private final static String TITLE = "title";
-    private final static String URL = "url";
-
-    private String title;
-    private String url;
+    private final static String ID = "id";
     //private String mTitle;
+
+    private ViewGroup rootView;
 
     /**
      * Factory method for this fragment class. Constructs a new fragment for the given page number.
      */
-    public static final ImageViewer create(String title, String url) {
+    public static final ImageViewer create(String title, String id) {
         ImageViewer imageViewer = new ImageViewer();
         Bundle args = new Bundle();
         args.putString(TITLE, title);
-        args.putString(URL, url);
+        args.putString(ID, id);
         imageViewer.setArguments(args);
         return imageViewer;
     }
@@ -47,37 +48,30 @@ public class ImageViewer extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        title = getArguments().getString(TITLE);
-        url = getArguments().getString(URL);
-
-        TextView textView = (TextView) getActivity().findViewById(R.id.title);
-        textView.setText(getArguments().getString(TITLE));
-
-        Drawable image = new ApiConnector().downloadImage(getArguments().getString(URL));
-        ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
-        imageView.setImageDrawable(image);
     }
 
     @Override
     public void onAttach(Context context)
     {
         super.onAttach(context);
-
-        //TextView textView = (TextView) getActivity().findViewById(R.id.title);
-        //textView.setText(title);
-
-        //Drawable image = new ApiConnector().downloadImage(url);
-        //ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
-        //imageView.setImageDrawable(image);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout containing a title and body text.
-        ViewGroup rootView = (ViewGroup) inflater
+        rootView = (ViewGroup) inflater
                 .inflate(R.layout.fragment_image_viewer, container, false);
+
+        String title = getArguments().getString(TITLE);
+        String id = getArguments().getString(ID);
+
+        TextView textView = (TextView) rootView.findViewById(R.id.title);
+        textView.setText(title);
+
+        Drawable image = new ApiConnector().downloadImage(id);
+        ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
+        imageView.setImageDrawable(image);
 
         // Set the title view to show the page number.
         //((TextView) rootView.findViewById(android.R.id.text1)).setText(
@@ -86,17 +80,23 @@ public class ImageViewer extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onInflate(Context context, AttributeSet attrs, Bundle savedInstanceState)
+    {
+        super.onInflate(context, attrs, savedInstanceState);
+
+        TextView textView = (TextView) rootView.findViewById(R.id.title);
+        textView.setText(getArguments().getString(TITLE));
+
+        Drawable image = new ApiConnector().downloadImage(getArguments().getString(ID));
+        ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
+        imageView.setImageDrawable(image);
+    }
     /**
      * Returns the page number represented by this fragment object.
      */
     public String getTitle() {
         return TITLE;
-    }
-
-    private Drawable downloadImage(String url)
-    {
-        Drawable image = new ApiConnector().downloadImage(url);
-        return image;
     }
 
     /*

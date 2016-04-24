@@ -254,12 +254,12 @@ public class ApiConnector extends Activity
         }
     }
 
-    public Drawable downloadImage(String url)
+    public Drawable downloadImage(String id)
     {
         Drawable image = null;
         try
         {
-            image = new DownloadContentTask().execute(url).get();
+            image = new DownloadImageTask().execute(id).get();
         } catch (InterruptedException e)
         {
             e.printStackTrace();
@@ -270,12 +270,38 @@ public class ApiConnector extends Activity
         return image;
     }
 
-    private class DownloadContentTask extends AsyncTask<String, Void, Drawable>
+    public Drawable downloadThumbnail(String id)
+    {
+        Drawable image = null;
+        try
+        {
+            image = new DownloadThumbnailTask().execute(id).get();
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        } catch (ExecutionException e)
+        {
+            e.printStackTrace();
+        }
+        return image;
+    }
+
+    private class DownloadThumbnailTask extends AsyncTask<String, Void, Drawable>
     {
         @Override
         protected Drawable doInBackground(String... params)
         {
-            return REST.downloadContent(params[0]);
+            return REST.downloadThumbnail(params[0]);
+        }
+
+    }
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Drawable>
+    {
+        @Override
+        protected Drawable doInBackground(String... params)
+        {
+            return REST.downloadImage(params[0]);
         }
 
     }

@@ -18,8 +18,8 @@ public class DetailsActivity extends ActionBarActivity {
         String title = getIntent().getStringExtra("title");
         Drawable drawable = getIntent().getParcelableExtra("image");
 
-        TextView titleTextView = (TextView) findViewById(R.id.title);
-        titleTextView.setText(title);
+        //TextView titleTextView = (TextView) findViewById(R.id.title);
+        //titleTextView.setText(title);
 
         ImageView imageView = (ImageView) findViewById(R.id.image);
         imageView.setImageDrawable(drawable);

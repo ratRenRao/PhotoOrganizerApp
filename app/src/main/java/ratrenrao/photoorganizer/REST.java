@@ -6,6 +6,7 @@ import android.content.ContentValues;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 
+import com.google.android.gms.drive.DriveContents;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
@@ -19,8 +20,10 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +51,7 @@ final class REST { private REST() {}
                 if (email != null) {
                     mConnCBs = (ConnectCBs)act;
                     mGOOSvc = new Drive.Builder(AndroidHttp.newCompatibleTransport(), new GsonFactory(),
-                            GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE_METADATA_READONLY))
+                            GoogleAccountCredential.usingOAuth2(UT.acx, Collections.singletonList(DriveScopes.DRIVE))
                                     .setSelectedAccountName(email)
                     ).build();
                     return true;
@@ -169,9 +172,10 @@ final class REST { private REST() {}
         return result.substring(0, result.length() - 4) + ")";
     }
 
-    static Drawable downloadContent(String rsid)
+    static Drawable downloadThumbnail(String rsid)
     {
         //GenericUrl url = new GenericUrl(downloadUrl);
+        Drawable drawable = null;
         InputStream is = null;
         try
         {
@@ -182,10 +186,9 @@ final class REST { private REST() {}
                 {
                     GenericUrl url = new GenericUrl(gFl.getThumbnailLink());
                     is = mGOOSvc.getRequestFactory().buildGetRequest(url).execute().getContent();
-                //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
-                //is = response.getContent();
-                Drawable drawable = Drawable.createFromStream(is, null);
-                return drawable;
+                    //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
+                    //is = response.getContent();
+                    drawable = Drawable.createFromStream(is, null);
                 }
             }
         } catch (UserRecoverableAuthIOException uraEx) {
@@ -195,6 +198,56 @@ final class REST { private REST() {}
         }
         catch (Exception e) {
             String tmp = "t";}
+
+        /*
+        if(drawable == null)
+        {
+            try
+            {
+                if(rsid != null)
+                {
+                    File gFl = mGOOSvc.files().get(rsid).setFields("webViewLink").execute();
+                    if (gFl != null)
+                    {
+                        GenericUrl url = new GenericUrl(gFl.getWebViewLink().toString());
+                        is = mGOOSvc.getRequestFactory().buildGetRequest(url).execute().getContent();
+                        //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
+                        //is = response.getContent();
+                        drawable = Drawable.createFromStream(is, null);
+                    }
+                }
+            } catch (UserRecoverableAuthIOException uraEx) {
+                String tmp = "t";
+            } catch (GoogleAuthIOException gauEx) {
+                String tmp = "t";
+            }
+            catch (Exception e) {
+                String tmp = "t";}
+        }
+        */
+        return null;
+    }
+
+    static Drawable downloadImage(String fileId)
+    {
+        InputStream is = null;
+        if(fileId != null)
+        {
+            try
+            {
+                is = mGOOSvc.files().get(fileId).executeMediaAsInputStream();
+                //OutputStream outputStream = new ByteArrayOutputStream();
+                //mGOOSvc.files().get(fileId).executeMediaAndDownloadTo(outputStream);
+
+                return Drawable.createFromStream(is, null);
+            } catch (UserRecoverableAuthIOException uraEx) {
+                String tmp = "t";
+            } catch (GoogleAuthIOException gauEx) {
+                String tmp = "t";
+            }
+            catch (Exception e) {
+                String tmp = "t";}
+        }
 
         return null;
     }

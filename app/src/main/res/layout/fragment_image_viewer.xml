@@ -9,21 +9,27 @@
               android:padding="16dp"
               android:layout_width="match_parent"
               android:layout_height="match_parent" /-->
-
-    <ImageView
-        android:id="@+id/largeImageView"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:scaleType="fitCenter" />
+        android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:background="#00000c"
-        android:padding="10dp"
-        android:textColor="#fff"
-        android:textSize="20dp" />
+        <ImageView
+            android:id="@+id/largeImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="#00000c"
+            android:padding="10dp"
+            android:textColor="#fff"
+            android:textSize="20dp" />
+
+    </LinearLayout>
+
 </ScrollView>

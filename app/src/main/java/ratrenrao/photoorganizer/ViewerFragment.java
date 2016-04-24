@@ -137,7 +137,7 @@ public class ViewerFragment extends Fragment
                         latitude,
                         longitude
                 );
-                Drawable image = new ApiConnector().downloadImage(picture.getId());
+                Drawable image = new ApiConnector().downloadThumbnail(picture.getId());
                 picture.setImage(image);
                 pictures.add(picture);
             }

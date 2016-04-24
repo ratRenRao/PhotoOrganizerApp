@@ -124,7 +124,7 @@ public class ImageViewerActivity extends FragmentActivity
 
         for(Picture picture : filteredPictures)
         {
-            imageViewers.add(new ImageViewer().create(picture.getName(), picture.getWebContentLink()));
+            imageViewers.add(new ImageViewer().create(picture.getName(), picture.getId()));
         }
 
         return imageViewers;

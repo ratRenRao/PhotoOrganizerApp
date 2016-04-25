@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.common.api.Api;
 import com.google.api.services.drive.model.File;
 
 import java.util.ArrayList;
@@ -26,10 +27,15 @@ public class ImageViewer extends Fragment {
 
     private final static String TITLE = "title";
     private final static String ID = "id";
+    private static MainActivity MAIN_ACTIVITY;
     //private String mTitle;
 
     private ViewGroup rootView;
 
+    public static void setApiConnector(MainActivity mainActivity)
+    {
+        MAIN_ACTIVITY = mainActivity;
+    }
     /**
      * Factory method for this fragment class. Constructs a new fragment for the given page number.
      */
@@ -69,7 +75,7 @@ public class ImageViewer extends Fragment {
         TextView textView = (TextView) rootView.findViewById(R.id.title);
         textView.setText(title);
 
-        Drawable image = new ApiConnector().downloadImage(id);
+        Drawable image = new ApiConnector().downloadImage(id, getActivity());
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
         imageView.setImageDrawable(image);
 
@@ -88,7 +94,7 @@ public class ImageViewer extends Fragment {
         TextView textView = (TextView) rootView.findViewById(R.id.title);
         textView.setText(getArguments().getString(TITLE));
 
-        Drawable image = new ApiConnector().downloadImage(getArguments().getString(ID));
+        Drawable image = new ApiConnector().downloadImage(getArguments().getString(ID), getActivity());
         ImageView imageView = (ImageView) getActivity().findViewById(R.id.largeImageView);
         imageView.setImageDrawable(image);
     }

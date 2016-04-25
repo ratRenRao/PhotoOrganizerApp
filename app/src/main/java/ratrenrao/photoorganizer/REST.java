@@ -5,8 +5,10 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.renderscript.ScriptGroup;
 
 import com.google.android.gms.drive.DriveContents;
+import com.google.android.gms.drive.DriveFile;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
@@ -14,16 +16,20 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecovera
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +45,7 @@ final class REST { private REST() {}
     private static Drive mGOOSvc;
     private static ConnectCBs mConnCBs;
     private static boolean mConnected;
-
+    private static Activity currentActivity;
     /************************************************************************************************
      * initialize Google Drive Api
      * @param act   activity context
@@ -47,6 +53,7 @@ final class REST { private REST() {}
     static boolean init(Activity act){                    //UT.lg( "REST init " + email);
         if (act != null)
             try {
+                currentActivity = act;
                 String email = UT.AM.getEmail();
                 if (email != null) {
                     mConnCBs = (ConnectCBs)act;
@@ -172,7 +179,7 @@ final class REST { private REST() {}
         return result.substring(0, result.length() - 4) + ")";
     }
 
-    static Drawable downloadThumbnail(String rsid)
+    static Drawable downloadThumbnail(String rsid, Activity activity)
     {
         //GenericUrl url = new GenericUrl(downloadUrl);
         Drawable drawable = null;
@@ -181,6 +188,7 @@ final class REST { private REST() {}
         {
             if(rsid != null)
             {
+                /*
                 File gFl = mGOOSvc.files().get(rsid).setFields("thumbnailLink").execute();
                 if (gFl != null)
                 {
@@ -189,7 +197,12 @@ final class REST { private REST() {}
                     //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
                     //is = response.getContent();
                     drawable = Drawable.createFromStream(is, null);
+                    return drawable;
                 }
+                */
+                is = mGOOSvc.files().get(rsid).executeMediaAsInputStream();
+                drawable = Drawable.createFromStream(is, null);
+                return drawable;
             }
         } catch (UserRecoverableAuthIOException uraEx) {
             String tmp = "t";
@@ -199,57 +212,44 @@ final class REST { private REST() {}
         catch (Exception e) {
             String tmp = "t";}
 
-        /*
-        if(drawable == null)
-        {
-            try
-            {
-                if(rsid != null)
-                {
-                    File gFl = mGOOSvc.files().get(rsid).setFields("webViewLink").execute();
-                    if (gFl != null)
-                    {
-                        GenericUrl url = new GenericUrl(gFl.getWebViewLink().toString());
-                        is = mGOOSvc.getRequestFactory().buildGetRequest(url).execute().getContent();
-                        //HttpResponse response = mGOOSvc.getRequestFactory().buildGetRequest(url).execute();
-                        //is = response.getContent();
-                        drawable = Drawable.createFromStream(is, null);
-                    }
-                }
-            } catch (UserRecoverableAuthIOException uraEx) {
-                String tmp = "t";
-            } catch (GoogleAuthIOException gauEx) {
-                String tmp = "t";
-            }
-            catch (Exception e) {
-                String tmp = "t";}
-        }
-        */
         return null;
     }
 
-    static Drawable downloadImage(String fileId)
+    static Drawable downloadImage(String fileId, Activity activity)
     {
-        InputStream is = null;
-        if(fileId != null)
+        //if(currentActivity.getClass().toString() != activity.getClass().toString())
+        //    init(activity);
+        InputStream in;
+        Drawable drawable = null;
+        try
         {
-            try
+            if(fileId != null)
             {
-                is = mGOOSvc.files().get(fileId).executeMediaAsInputStream();
-                //OutputStream outputStream = new ByteArrayOutputStream();
-                //mGOOSvc.files().get(fileId).executeMediaAndDownloadTo(outputStream);
-
-                return Drawable.createFromStream(is, null);
-            } catch (UserRecoverableAuthIOException uraEx) {
-                String tmp = "t";
-            } catch (GoogleAuthIOException gauEx) {
-                String tmp = "t";
+                in = mGOOSvc.files().get(fileId).executeMediaAsInputStream();
+                drawable = Drawable.createFromStream(in, null);
+                return drawable;
             }
-            catch (Exception e) {
-                String tmp = "t";}
+
+        } catch (UserRecoverableAuthIOException uraEx) {
+            String tmp = "t";
+        } catch (GoogleAuthIOException gauEx) {
+            String tmp = "t";
         }
+        catch (Exception e) {
+            String tmp = "t";}
 
         return null;
+    }
+
+    private static void copyStream(InputStream input, OutputStream output)
+            throws IOException
+    {
+        byte[] buffer = new byte[1024]; // Adjust if you want
+        int bytesRead;
+        while ((bytesRead = input.read(buffer)) != -1)
+        {
+            output.write(buffer, 0, bytesRead);
+        }
     }
 }
 

@@ -1,10 +1,12 @@
 package ratrenrao.photoorganizer;
 
 
+import android.accounts.AccountManager;
 import android.app.Activity;
 import android.content.ComponentCallbacks;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.database.SQLException;
 import android.graphics.Bitmap;
@@ -13,12 +15,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Debug;
 import android.provider.ContactsContract;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.AccountPicker;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -56,6 +61,7 @@ public class ApiConnector extends Activity
 
     private static boolean mBusy;
     private Context mainActivityContext;
+    private Activity currentActivity;
 
     private static ArrayList<File> accountPhotos;
 
@@ -70,8 +76,17 @@ public class ApiConnector extends Activity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
         apiConnectorListener = (ApiConnectorListener) getApplicationContext();
+    }
+
+    public void initializeConnection()
+    {
+        UT.init(this);
+        if (!REST.init(this)) {
+            startActivityForResult(AccountPicker.newChooseAccountIntent(null,
+                            null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE}, true, null, null, null, null),
+                    REQ_ACCPICK);
+        }
     }
 
     protected void uploadPhoto(File file)
@@ -101,6 +116,27 @@ public class ApiConnector extends Activity
         }
 
         return parsedMetadata;
+    }
+
+    @Override
+    protected void onActivityResult(final int request, final int result, final Intent data) {
+        switch (request) {
+            case REQ_CONNECT:
+                if (result == RESULT_OK)
+                    REST.connect();
+                else {                                                                       UT.lg("act result - NO AUTH");
+                    suicide(R.string.err_auth_nogo);  //---------------------------------->>>
+                }
+                break;
+            case REQ_ACCPICK:
+                if (data != null && data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME) != null)
+                    UT.AM.setEmail(data.getStringExtra(AccountManager.KEY_ACCOUNT_NAME));
+                if (!REST.init(this)) {                                                    UT.lg("act result - NO ACCOUNT");
+                    suicide(R.string.err_auth_accpick); //---------------------------------->>>
+                }
+                break;
+        }
+        super.onActivityResult(request, result, data);
     }
 
     @Override
@@ -254,8 +290,9 @@ public class ApiConnector extends Activity
         }
     }
 
-    public Drawable downloadImage(String id)
+    public Drawable downloadImage(String id, Activity activity)
     {
+        currentActivity = activity;
         Drawable image = null;
         try
         {
@@ -270,8 +307,9 @@ public class ApiConnector extends Activity
         return image;
     }
 
-    public Drawable downloadThumbnail(String id)
+    public Drawable downloadThumbnail(String id, Activity activity)
     {
+        currentActivity = activity;
         Drawable image = null;
         try
         {
@@ -291,7 +329,7 @@ public class ApiConnector extends Activity
         @Override
         protected Drawable doInBackground(String... params)
         {
-            return REST.downloadThumbnail(params[0]);
+            return REST.downloadThumbnail(params[0], currentActivity);
         }
 
     }
@@ -301,7 +339,7 @@ public class ApiConnector extends Activity
         @Override
         protected Drawable doInBackground(String... params)
         {
-            return REST.downloadImage(params[0]);
+            return REST.downloadImage(params[0], currentActivity);
         }
 
     }

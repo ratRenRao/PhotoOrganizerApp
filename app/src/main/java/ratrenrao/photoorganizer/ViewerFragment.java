@@ -35,7 +35,7 @@ public class ViewerFragment extends Fragment
 {
     private GridView gridView;
     private GridViewAdapter gridAdapter;
-    private Activity mainActivity;
+    private MainActivity mainActivity;
     public boolean initialized;
     private View view;
     private ArrayList<Picture> filteredPictures = new ArrayList<>();
@@ -78,23 +78,25 @@ public class ViewerFragment extends Fragment
     public void onAttach(Context context)
     {
         super.onAttach(context);
+        mainActivity = (MainActivity) getActivity();
         //updateDisplay();
     }
 
 
     public void updateDisplay()
     {
+        filteredPictures = getData();
         //getActivity().setContentView(R.layout.fragment_viewer);
         gridView = (GridView) getActivity().findViewById(R.id.gridView);
-        gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, getData());
+        gridAdapter = new GridViewAdapter(getContext(), R.layout.grid_item_layout, filteredPictures);
         gridView.setAdapter(gridAdapter);
+        ImageViewer.setApiConnector(mainActivity);
 
         gridView.setOnItemClickListener(new OnItemClickListener()
         {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id)
             {
                 Picture item = (Picture) parent.getItemAtPosition(position);
-
                 //new ImageViewerActivity();
                 //Create intent
                 ImageViewerActivity.setFilteredPictures(filteredPictures);
@@ -137,8 +139,8 @@ public class ViewerFragment extends Fragment
                         latitude,
                         longitude
                 );
-                Drawable image = new ApiConnector().downloadThumbnail(picture.getId());
-                picture.setImage(image);
+                //Drawable image = new ApiConnector().downloadThumbnail(picture.getThumbnailLink(), getActivity());
+                //picture.setImage(image);
                 pictures.add(picture);
             }
             filteredPictures = pictures;
@@ -152,6 +154,8 @@ public class ViewerFragment extends Fragment
             cursor.close();
         }
 
+        //databaseModifications();
+
         return pictures;
 
         /*
@@ -163,6 +167,11 @@ public class ViewerFragment extends Fragment
         }
         return imageItems;
         */
+    }
+    private void databaseModifications()
+    {
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this.getContext());
+        databaseHelper.deletePicture(filteredPictures.get(filteredPictures.size() - 1).getId());
     }
 
     @Override

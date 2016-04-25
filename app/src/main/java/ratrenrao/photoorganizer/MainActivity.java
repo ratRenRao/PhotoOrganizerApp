@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
@@ -367,5 +368,61 @@ public class MainActivity extends AppCompatActivity
     public void onImageSelected(Picture selectedThumbnail)
     {
 
+    }
+
+    public ApiConnector getApiConnector()
+    {
+        return  apiConnector;
+    }
+
+    public ArrayList<Picture> getData()
+    {
+        final DatabaseHelper databaseHelper = new DatabaseHelper(this);
+        ArrayList<Picture> pictures = new ArrayList<>();
+        Cursor cursor = databaseHelper.getAllPictures();
+        try
+        {
+            while (cursor.moveToNext())
+            {
+                String id = cursor.getString(cursor.getColumnIndex("id"));
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                String mimeType = cursor.getString(cursor.getColumnIndex("mimeType"));
+                String imageMediaMetadata = cursor.getString(cursor.getColumnIndex("imageMediaMetadata"));
+                String webContentLink = cursor.getString(cursor.getColumnIndex("webContentLink"));
+                String thumbnailLink = cursor.getString(cursor.getColumnIndex("thumbnailLink"));
+                String latitude = cursor.getString(cursor.getColumnIndex("latitude"));
+                String longitude = cursor.getString(cursor.getColumnIndex("longitude"));
+
+                Picture picture = new Picture(
+                        id,
+                        name,
+                        mimeType,
+                        imageMediaMetadata,
+                        webContentLink,
+                        thumbnailLink,
+                        latitude,
+                        longitude
+                );
+                Drawable image = apiConnector.downloadThumbnail(picture.getId(), this);
+                // if (image == null)
+                //     image = new ApiConnector().downloadImage(picture.getId(), getActivity());
+                picture.setImage(image);
+                pictures.add(picture);
+            }
+            //filteredPictures = pictures;
+        } catch (Exception e)
+        {
+            String error = e.toString();
+        } finally
+        {
+            cursor.close();
+        }
+
+        return pictures;
+    }
+
+    public Drawable downloadImage(String id)
+    {
+        return apiConnector.downloadImage(id, this);
     }
 }

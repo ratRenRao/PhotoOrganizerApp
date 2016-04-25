@@ -1,0 +1,56 @@
+{
+  "project_info": {
+    "project_id": "photoorganizer-1276",
+    "project_number": "954874911675",
+    "name": "PhotoOrganizer"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954874911675:android:5f8621a1ec19a098",
+        "client_id": "android:ratrenrao.photoorganizer",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "ratrenrao.photoorganizer",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954874911675-7hovqa0fr2pa4cfs09333k7abc466olq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ratrenrao.photoorganizer",
+            "certificate_hash": "095C9414E7E2FA234A6FE93999C136BE8B5B8C20"
+          }
+        },
+        {
+          "client_id": "954874911675-gg9tima7cjjml7fauarrdvbpbjcclrqq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 1,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

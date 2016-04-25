@@ -11,12 +11,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.graphics.Bitmap;
 
+import com.google.android.gms.common.api.Api;
+
 import java.util.ArrayList;
 
 public class GridViewAdapter extends ArrayAdapter<Picture> {
 
     private Context context;
     private int layoutResourceId;
+    private ApiConnector apiConnector;
     private ArrayList<Picture> data = new ArrayList<>();
 
     public GridViewAdapter(Context context, int layoutResourceId, ArrayList<Picture> data) {

@@ -1,9 +1,61 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
-             tools:context="ratrenrao.photoorganizer.TagFragment">
+             android:background="@color/colorPhotoBackground"
+             tools:context="ratrenrao.photoorganizer.TagFragment"
+              android:orientation="vertical">
 
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tag_header_string"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp"
+        android:id="@+id/textView"
+        android:layout_gravity="center"/>
 
-</FrameLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/newTagText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/string_tag_name"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_marginTop="30dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="25dp"/>
+
+        <EditText
+            android:id="@+id/newTagEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:minHeight="20dp"
+            android:minWidth="140dp"
+            android:layout_marginTop="30dp"
+            android:layout_weight="1"
+            android:layout_marginRight="25dp"/>
+
+    </LinearLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/buttonNewTag"
+        android:id="@+id/buttonNewTag"
+        android:layout_below="@+id/newTagText"
+        android:layout_alignStart="@+id/textView"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"
+        android:layout_gravity="center_horizontal"/>
+
+
+</LinearLayout>

@@ -188,7 +188,6 @@ final class REST { private REST() {}
         {
             if(rsid != null)
             {
-                /*
                 File gFl = mGOOSvc.files().get(rsid).setFields("thumbnailLink").execute();
                 if (gFl != null)
                 {
@@ -199,10 +198,11 @@ final class REST { private REST() {}
                     drawable = Drawable.createFromStream(is, null);
                     return drawable;
                 }
-                */
+                /*
                 is = mGOOSvc.files().get(rsid).executeMediaAsInputStream();
                 drawable = Drawable.createFromStream(is, null);
                 return drawable;
+                */
             }
         } catch (UserRecoverableAuthIOException uraEx) {
             String tmp = "t";

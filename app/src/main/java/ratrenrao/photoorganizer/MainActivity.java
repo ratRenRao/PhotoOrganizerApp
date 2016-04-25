@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         viewerFragment = new ViewerFragment();
-        tagFragment = new TagFragment();
+        //tagFragment = new TagFragment();
         filterFragment = new FilterFragment();
         apiConnector = new ApiConnector();
 
@@ -187,6 +187,7 @@ public class MainActivity extends AppCompatActivity
                         apiConnector.parsePhotoData(context);
                         break;
                     case 2:
+                        tagFragment = new TagFragment();
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.fragmentMainContainer, tagFragment)
                                 .addToBackStack(null)
@@ -198,6 +199,7 @@ public class MainActivity extends AppCompatActivity
                         //apiConnector.signIn();
                         break;
                 }
+                mDrawerToggle.getToolbarNavigationClickListener().onClick(view);
             }
         });
     }

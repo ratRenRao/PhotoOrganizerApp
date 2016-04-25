@@ -181,11 +181,11 @@ class DatabaseHelper
     }
     */
 
-    public Cursor getTag(int id)
+    public Cursor getTag(String name)
     {
         SQLiteDatabase db = databaseOpenHelper.getReadableDatabase();
         return db.query(
-                "tags", null, "_id='" + Integer.toString(id) + "'", null, null, null, null);
+                "tags", null, "name='" + name + "'", null, null, null, null);
     }
 
     public void deleteTag(int id)

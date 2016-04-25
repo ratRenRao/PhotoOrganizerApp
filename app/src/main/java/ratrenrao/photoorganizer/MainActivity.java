@@ -1,5 +1,6 @@
 package ratrenrao.photoorganizer;
 
+import android.accounts.AccountManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -18,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -29,10 +31,9 @@ import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListe
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 
-import android.accounts.AccountManager;
-import android.widget.Toast;
-
 import java.util.ArrayList;
+
+import static ratrenrao.photoorganizer.R.id.filterTagSpinner;
 
 public class MainActivity extends AppCompatActivity
     implements OnConnectionFailedListener,
@@ -178,10 +179,16 @@ public class MainActivity extends AppCompatActivity
                 switch (position)
                 {
                     case 0:
+                        /*
                         getSupportFragmentManager().beginTransaction()
                                 .replace(R.id.fragmentMainContainer, filterFragment)
                                 .addToBackStack(null)
                                 .commit();
+                                */
+                        String[] strings = { "Red", "Blue", "Green" };
+
+                        TagSelectionFragment mySpin = (TagSelectionFragment)findViewById(filterTagSpinner);
+                        mySpin.setItems(strings);
                         break;
                     case 1:
                         apiConnector.parsePhotoData(context);

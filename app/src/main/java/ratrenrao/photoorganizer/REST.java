@@ -2,35 +2,24 @@ package ratrenrao.photoorganizer;
 
 
 import android.app.Activity;
-import android.content.ContentValues;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.renderscript.ScriptGroup;
 
-import com.google.android.gms.drive.DriveContents;
-import com.google.android.gms.drive.DriveFile;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAuthIOException;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.GenericUrl;
-import com.google.api.client.http.HttpResponse;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -225,6 +214,10 @@ final class REST { private REST() {}
         {
             if(fileId != null)
             {
+                /*
+                GenericUrl url = new GenericUrl(gFl.getThumbnailLink());
+                is = mGOOSvc.getRequestFactory().buildGetRequest(url).execute().getContent();
+                */
                 in = mGOOSvc.files().get(fileId).executeMediaAsInputStream();
                 drawable = Drawable.createFromStream(in, null);
                 return drawable;

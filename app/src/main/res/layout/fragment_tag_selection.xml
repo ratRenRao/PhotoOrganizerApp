@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          android:orientation="vertical"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:id="@+id/filterSpinnerLayout">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tag_filter_string"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:textSize="26sp"/>
+
+        <Spinner xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:orientation="vertical"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/filterTagSpinner"
+                 android:layout_weight="4"
+                 android:layout_gravity="right">
+        </Spinner>
+    </LinearLayout>
+
+        <Spinner xmlns:android="http://schemas.android.com/apk/res/android"
+                 android:orientation="vertical"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/filterDistance">
+        </Spinner>
+</LinearLayout>
+
+
